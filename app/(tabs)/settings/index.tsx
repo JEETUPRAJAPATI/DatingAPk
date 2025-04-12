@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Modal } from 'react-native';
+import { useState } from 'react';
 import { router } from 'expo-router';
 import { Info, FileText, Shield, Trash2, Star, LogOut } from 'lucide-react-native';
 

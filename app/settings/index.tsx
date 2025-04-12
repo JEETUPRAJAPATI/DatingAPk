@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal } from 'react-native';
+import { useState } from 'react';
 import { router } from 'expo-router';
 import { Info, FileText, Shield, Trash2, Star, LogOut, ArrowLeft } from 'lucide-react-native';
 
