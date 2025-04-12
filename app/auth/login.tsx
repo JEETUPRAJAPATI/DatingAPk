@@ -1,19 +1,34 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, Image, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 
+type SocialProvider = 'google' | 'facebook' | 'apple';
+
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendOTP = () => {
-    if (phoneNumber.length >= 10) {
-      router.push('/auth/verify');
+  const handleSocialLogin = async (provider: SocialProvider) => {
+    setIsLoading(true);
+    try {
+      // Simulate social authentication
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simulate fetching phone number from social profile
+      const mockPhoneNumber = '+1234567890';
+      setPhoneNumber(mockPhoneNumber);
+    } catch (error) {
+      console.error('Social login error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Handle Google login
+  const handleContinue = () => {
+    if (phoneNumber.length >= 10) {
+      router.push('/auth/verify');
+    }
   };
 
   return (
@@ -25,6 +40,54 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to continue</Text>
+
+        <View style={styles.socialButtons}>
+          <Pressable
+            style={styles.socialButton}
+            onPress={() => handleSocialLogin('google')}
+            disabled={isLoading}
+          >
+            <Image
+              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }}
+              style={styles.socialIcon}
+            />
+            <Text style={styles.socialButtonText}>Continue with Google</Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.socialButton}
+            onPress={() => handleSocialLogin('facebook')}
+            disabled={isLoading}
+          >
+            <Image
+              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg' }}
+              style={styles.socialIcon}
+            />
+            <Text style={styles.socialButtonText}>Continue with Facebook</Text>
+          </Pressable>
+
+          {Platform.OS === 'ios' && (
+            <Pressable
+              style={[styles.socialButton, styles.appleButton]}
+              onPress={() => handleSocialLogin('apple')}
+              disabled={isLoading}
+            >
+              <Image
+                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' }}
+                style={[styles.socialIcon, styles.appleIcon]}
+              />
+              <Text style={[styles.socialButtonText, styles.appleButtonText]}>
+                Continue with Apple
+              </Text>
+            </Pressable>
+          )}
+        </View>
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -40,27 +103,10 @@ export default function LoginScreen() {
 
         <Pressable
           style={[styles.button, phoneNumber.length < 10 && styles.buttonDisabled]}
-          onPress={handleSendOTP}
-          disabled={phoneNumber.length < 10}
+          onPress={handleContinue}
+          disabled={phoneNumber.length < 10 || isLoading}
         >
           <Text style={styles.buttonText}>Continue with Phone</Text>
-        </Pressable>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <Pressable
-          style={styles.googleButton}
-          onPress={handleGoogleLogin}
-        >
-          <Image
-            source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }}
-            style={styles.googleIcon}
-          />
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
         </Pressable>
 
         <View style={styles.footer}>
@@ -106,6 +152,59 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     textAlign: 'center',
   },
+  socialButtons: {
+    width: '100%',
+    gap: 16,
+    marginBottom: 24,
+  },
+  socialButton: {
+    width: '100%',
+    height: 56,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+  },
+  appleButton: {
+    backgroundColor: '#000',
+    borderColor: '#FFF',
+  },
+  socialIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
+  },
+  appleIcon: {
+    tintColor: '#FFF',
+  },
+  socialButtonText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 18,
+    color: '#FF00FF',
+  },
+  appleButtonText: {
+    color: '#FFF',
+  },
+  divider: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 0, 255, 0.3)',
+  },
+  dividerText: {
+    fontFamily: 'Rajdhani',
+    fontSize: 16,
+    color: '#FF00FF',
+    marginHorizontal: 16,
+  },
   inputContainer: {
     width: '100%',
     marginBottom: 24,
@@ -141,44 +240,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
     color: '#000000',
-  },
-  divider: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255, 0, 255, 0.3)',
-  },
-  dividerText: {
-    fontFamily: 'Rajdhani',
-    fontSize: 16,
-    color: '#FF00FF',
-    marginHorizontal: 16,
-  },
-  googleButton: {
-    width: '100%',
-    height: 56,
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FF00FF',
-  },
-  googleIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 12,
-  },
-  googleButtonText: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 18,
-    color: '#FF00FF',
   },
   footer: {
     flexDirection: 'row',

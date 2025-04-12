@@ -6,7 +6,13 @@ import { ArrowLeft } from 'lucide-react-native';
 export default function VerifyScreen() {
   const [otp, setOtp] = useState(['', '', '', '']);
   const [timeLeft, setTimeLeft] = useState(60);
+  const [isNewUser, setIsNewUser] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([null, null, null, null]);
+
+  useEffect(() => {
+    // Simulate checking if user exists
+    setIsNewUser(Math.random() > 0.5);
+  }, []);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -28,7 +34,22 @@ export default function VerifyScreen() {
 
   const handleVerify = () => {
     if (otp.join('').length === 4) {
-      router.push('/auth/gender');
+      if (isNewUser) {
+        router.push('/auth/gender');
+      } else {
+        router.push('/auth/verification-success');
+      }
+    }
+  };
+
+  const handleResendOTP = () => {
+    if (timeLeft === 0) {
+      setTimeLeft(60);
+      // Simulate resending OTP
+      setOtp(['', '', '', '']);
+      if (inputRefs.current[0]) {
+        inputRefs.current[0]?.focus();
+      }
     }
   };
 
@@ -41,7 +62,7 @@ export default function VerifyScreen() {
       <View style={styles.content}>
         <Text style={styles.title}>Enter OTP</Text>
         <Text style={styles.subtitle}>
-          {timeLeft > 0 ? `Resend code in ${timeLeft}s` : 'Resend code'}
+          Enter the verification code we sent to your phone
         </Text>
 
         <View style={styles.otpContainer}>
@@ -49,11 +70,19 @@ export default function VerifyScreen() {
             <TextInput
               key={index}
               ref={ref => inputRefs.current[index] = ref}
-              style={styles.otpInput}
+              style={[
+                styles.otpInput,
+                digit && styles.otpInputFilled
+              ]}
               maxLength={1}
               keyboardType="number-pad"
               value={digit}
               onChangeText={(text) => handleOtpChange(text, index)}
+              onKeyPress={({ nativeEvent }) => {
+                if (nativeEvent.key === 'Backspace' && !digit && index > 0) {
+                  inputRefs.current[index - 1]?.focus();
+                }
+              }}
             />
           ))}
         </View>
@@ -64,6 +93,16 @@ export default function VerifyScreen() {
           disabled={otp.join('').length < 4}
         >
           <Text style={styles.buttonText}>Verify</Text>
+        </Pressable>
+
+        <Pressable 
+          style={[styles.resendButton, timeLeft > 0 && styles.resendButtonDisabled]}
+          onPress={handleResendOTP}
+          disabled={timeLeft > 0}
+        >
+          <Text style={[styles.resendText, timeLeft > 0 && styles.resendTextDisabled]}>
+            {timeLeft > 0 ? `Resend code in ${timeLeft}s` : 'Resend code'}
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -91,6 +130,9 @@ const styles = StyleSheet.create({
     color: '#FF00FF',
     marginBottom: 8,
     textAlign: 'center',
+    textShadowColor: '#FF00FF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   subtitle: {
     fontFamily: 'Rajdhani',
@@ -114,6 +156,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 24,
     textAlign: 'center',
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+  },
+  otpInputFilled: {
+    backgroundColor: 'rgba(255, 0, 255, 0.2)',
+    borderColor: '#39FF14',
+    shadowColor: '#39FF14',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
   },
   button: {
     width: '100%',
@@ -135,5 +186,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
     color: '#000000',
+  },
+  resendButton: {
+    marginTop: 24,
+    padding: 12,
+  },
+  resendButtonDisabled: {
+    opacity: 0.5,
+  },
+  resendText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 16,
+    color: '#FF00FF',
+  },
+  resendTextDisabled: {
+    color: '#666',
   },
 });
