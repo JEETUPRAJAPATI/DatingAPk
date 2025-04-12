@@ -15,6 +15,16 @@ export default function EditProfileScreen() {
     location: 'South Mumbai',
   });
 
+  const handleUpdateProfile = async () => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      router.back();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -141,7 +151,7 @@ export default function EditProfileScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable style={styles.updateButton}>
+        <Pressable style={styles.updateButton} onPress={handleUpdateProfile}>
           <Text style={styles.updateButtonText}>Update</Text>
         </Pressable>
       </View>

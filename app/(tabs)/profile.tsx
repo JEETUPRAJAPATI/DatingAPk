@@ -46,6 +46,10 @@ const plans: Plan[] = [
 export default function ProfileScreen() {
   const [showUpgrade, setShowUpgrade] = useState(false);
 
+  const handleEditProfile = () => {
+    router.push('/profile/edit');
+  };
+
   if (showUpgrade) {
     return (
       <View style={styles.container}>
@@ -136,7 +140,7 @@ export default function ProfileScreen() {
 
           <Pressable 
             style={styles.editButton}
-            onPress={() => {/* Handle edit */}}
+            onPress={handleEditProfile}
           >
             <Edit3 size={20} color="#FF00FF" />
             <Text style={styles.editButtonText}>Edit Profile</Text>
