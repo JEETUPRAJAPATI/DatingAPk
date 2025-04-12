@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { Palette, Settings2, Info, FileText, Shield, Trash2, Apple as Apps, Star, LogOut, Crown } from 'lucide-react-native';
+import { Info, FileText, Shield, Trash2, Star, LogOut } from 'lucide-react-native';
 
 interface SettingItem {
   icon: JSX.Element;
@@ -11,62 +11,43 @@ interface SettingItem {
 }
 
 export default function SettingsScreen() {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  
   const handleLogout = () => {
-    // Implement logout logic
+    setShowLogoutModal(false);
     router.replace('/');
   };
 
   const settings: SettingItem[] = [
     {
-      icon: <Crown size={24} color="#FF00FF" />,
-      title: 'Upgrade Subscription',
-      route: '../profile',
-      color: '#FF00FF'
-    },
-    {
-      icon: <Palette size={24} color="#00FFFF" />,
-      title: 'Change Theme',
-      route: 'theme'
-    },
-    {
-      icon: <Settings2 size={24} color="#39FF14" />,
-      title: 'Discovery Settings',
-      route: 'discovery'
-    },
-    {
       icon: <Info size={24} color="#FF69B4" />,
       title: 'About Us',
-      route: 'about'
+      route: '/settings/about'
     },
     {
       icon: <FileText size={24} color="#4169E1" />,
       title: 'Terms of Use',
-      route: 'terms'
+      route: '/settings/terms'
     },
     {
       icon: <Shield size={24} color="#9370DB" />,
       title: 'Privacy Policy',
-      route: 'privacy'
+      route: '/settings/privacy'
     },
     {
       icon: <Trash2 size={24} color="#FF4500" />,
       title: 'Delete Account',
-      route: 'delete-account'
-    },
-    {
-      icon: <Apps size={24} color="#32CD32" />,
-      title: 'More Apps',
-      route: 'more-apps'
+      route: '/settings/delete-account'
     },
     {
       icon: <Star size={24} color="#FFD700" />,
       title: 'Rate App',
-      route: 'rate'
+      route: '/settings/rate'
     },
     {
       icon: <LogOut size={24} color="#FF6B6B" />,
       title: 'Logout',
-      action: handleLogout
+      action: () => setShowLogoutModal(true)
     }
   ];
 
@@ -96,6 +77,35 @@ export default function SettingsScreen() {
           </Pressable>
         ))}
       </ScrollView>
+
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Logout</Text>
+            <Text style={styles.modalText}>Are you sure you want to logout?</Text>
+            
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              
+              <Pressable
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleLogout}
+              >
+                <Text style={styles.confirmButtonText}>Logout</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -138,5 +148,62 @@ const styles = StyleSheet.create({
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
     color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    padding: 24,
+    width: '80%',
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+  },
+  modalTitle: {
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 24,
+    color: '#FF00FF',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontFamily: 'Rajdhani',
+    fontSize: 18,
+    color: '#FFFFFF',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: '#FF00FF',
+  },
+  confirmButton: {
+    backgroundColor: '#FF00FF',
+  },
+  cancelButtonText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 16,
+    color: '#FF00FF',
+  },
+  confirmButtonText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 16,
+    color: '#000000',
   },
 });
