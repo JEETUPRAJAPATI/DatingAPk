@@ -1,297 +1,335 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Platform, Pressable, Modal, ScrollView } from 'react-native';
-import { router } from 'expo-router';
-import { Settings, CreditCard as Edit3, MapPin, ChevronRight } from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, Image, ScrollView, Pressable } from 'react-native';
+import { Settings, CreditCard as Edit3, Crown, ChevronRight, Camera } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const INTERESTS = [
-  { id: 'travel', name: 'Travel ✈️' },
-  { id: 'movies', name: 'Movies 🎬' },
-  { id: 'art', name: 'Art 🎨' },
-  { id: 'technology', name: 'Technology 📱' },
-  { id: 'science', name: 'Science 🔬' }
-];
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  interval: 'month' | 'year';
+  features: string[];
+  popular?: boolean;
+}
 
-const BASICS = [
-  { id: 'zodiac', name: 'Zodiac', value: 'Select' },
-  { id: 'education', name: 'Education', value: 'Select' },
-  { id: 'familyPlans', name: 'Family Plans', value: 'Select' },
-  { id: 'covidVaccine', name: 'COVID Vaccine', value: 'Select' },
-  { id: 'personalityType', name: 'Personality Type', value: 'Select' },
-  { id: 'communicationStyle', name: 'Communication Style', value: 'Select' },
-  { id: 'loveStyle', name: 'Love Style', value: 'Select' },
-];
-
-const LIFESTYLE = [
-  { id: 'pets', name: 'Pets', value: 'Select' },
-  { id: 'drinking', name: 'Drinking Habits', value: 'Select' },
-  { id: 'smoking', name: 'Smoking Habits', value: 'Select' },
-  { id: 'workout', name: 'Workout', value: 'Select' },
-  { id: 'diet', name: 'Dietary Preferences', value: 'Select' },
-  { id: 'social', name: 'Social Media Presence', value: 'Select' },
-  { id: 'sleep', name: 'Sleeping Habits', value: 'Select' },
+const plans: Plan[] = [
+  {
+    id: 'monthly',
+    name: 'Premium',
+    price: 14.99,
+    interval: 'month',
+    features: [
+      'Unlimited Sparks',
+      'See who likes you',
+      'Priority matching',
+      'Rewind last swipe',
+      'Remove ads',
+    ],
+  },
+  {
+    id: 'yearly',
+    name: 'Premium Plus',
+    price: 99.99,
+    interval: 'year',
+    features: [
+      'All Premium features',
+      'Boosted visibility',
+      'Premium badge',
+      'Advanced filters',
+      'Priority support',
+    ],
+    popular: true,
+  },
 ];
 
 export default function ProfileScreen() {
-  const insets = useSafeAreaInsets();
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  if (showUpgrade) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Pressable 
+            style={styles.backButton}
+            onPress={() => setShowUpgrade(false)}
+          >
+            <Text style={styles.backButtonText}>←</Text>
+          </Pressable>
+          <Text style={styles.upgradeTitle}>Upgrade to Premium</Text>
+        </View>
+
+        <ScrollView style={styles.plansContainer}>
+          {plans.map((plan) => (
+            <View 
+              key={plan.id}
+              style={[
+                styles.planCard,
+                plan.popular && styles.popularPlan,
+              ]}
+            >
+              {plan.popular && (
+                <View style={styles.popularBadge}>
+                  <Text style={styles.popularText}>Most Popular</Text>
+                </View>
+              )}
+
+              <View style={styles.planHeader}>
+                <Crown size={32} color="#FF00FF" />
+                <Text style={styles.planName}>{plan.name}</Text>
+                <View style={styles.priceContainer}>
+                  <Text style={styles.currency}>$</Text>
+                  <Text style={styles.price}>{plan.price}</Text>
+                  <Text style={styles.interval}>/{plan.interval}</Text>
+                </View>
+              </View>
+
+              <View style={styles.featuresContainer}>
+                {plan.features.map((feature, index) => (
+                  <View key={index} style={styles.featureItem}>
+                    <Text style={styles.featureText}>• {feature}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Pressable style={styles.upgradeButton}>
+                <Text style={styles.upgradeButtonText}>
+                  Choose {plan.name}
+                </Text>
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=2574&auto=format&fit=crop' }}
-            style={styles.profileIcon}
-          />
-        </TouchableOpacity>
-        
-        <Text style={styles.title}>Profile</Text>
-        
-        <TouchableOpacity 
-          style={styles.upgradeButton}
-          onPress={() => router.push('/subscription')}
-        >
-          <Text style={styles.upgradeText}>⭐️ UPGRADE</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingsButton}>
-          <Settings size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.completionCard}>
-        <View style={styles.completionHeader}>
-          <Text style={styles.completionTitle}>Complete your profile</Text>
-          <TouchableOpacity style={styles.closeButton}>
-            <Text style={styles.closeText}>×</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressCircle}>
-            <Text style={styles.progressText}>15%</Text>
+    <View style={styles.container}>
+      <ScrollView style={styles.content}>
+        <View style={styles.profileHeader}>
+          <View style={styles.coverImageContainer}>
+            <Image
+              source={{ uri: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop' }}
+              style={styles.coverImage}
+            />
+            <LinearGradient
+              colors={['transparent', '#000']}
+              style={styles.coverGradient}
+            />
           </View>
-          <Text style={styles.progressDescription}>
-            Complete your profile to experience the best dating experience and better matches!
+
+          <View style={styles.avatarContainer}>
+            <Image
+              source={{ uri: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop' }}
+              style={styles.avatar}
+            />
+            <Pressable style={styles.cameraButton}>
+              <Camera size={20} color="#FF00FF" />
+            </Pressable>
+          </View>
+
+          <View style={styles.profileInfo}>
+            <Text style={styles.name}>Jessica Parker</Text>
+            <Text style={styles.location}>New York, NY</Text>
+          </View>
+
+          <Pressable 
+            style={styles.editButton}
+            onPress={() => {/* Handle edit */}}
+          >
+            <Edit3 size={20} color="#FF00FF" />
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>128</Text>
+            <Text style={styles.statLabel}>Matches</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>85%</Text>
+            <Text style={styles.statLabel}>Response</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>4.8</Text>
+            <Text style={styles.statLabel}>Rating</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About Me</Text>
+          <Text style={styles.bioText}>
+            Adventure seeker and coffee enthusiast. Love exploring new places and meeting interesting people. Always up for spontaneous trips and trying new experiences! 🌎✈️
           </Text>
         </View>
-      </View>
 
-      <View style={styles.profileCard}>
-        <Image
-          source={{ uri: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=2574&auto=format&fit=crop' }}
-          style={styles.profileImage}
-        />
-        <TouchableOpacity 
-          style={styles.editButton}
-          onPress={() => router.push('/edit-profile')}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Interests</Text>
+          <View style={styles.interestsContainer}>
+            {['Travel', 'Photography', 'Cooking', 'Yoga', 'Music'].map((interest, index) => (
+              <View key={index} style={styles.interestTag}>
+                <Text style={styles.interestText}>{interest}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <Pressable 
+          style={styles.upgradeCard}
+          onPress={() => setShowUpgrade(true)}
         >
-          <Edit3 size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.infoSection}>
-        <Text style={styles.name}>Andrew, 27</Text>
-        <View style={styles.locationRow}>
-          <MapPin size={16} color="#666" />
-          <Text style={styles.location}>Less than a kilometer away</Text>
-        </View>
-        <View style={styles.genderRow}>
-          <Text style={styles.gender}>♂️ Man</Text>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Interests</Text>
-        <View style={styles.interestsContainer}>
-          {INTERESTS.map((interest) => (
-            <TouchableOpacity 
-              key={interest.id}
-              style={styles.interestTag}
-              onPress={() => router.push('/interests')}
-            >
-              <Text style={styles.interestText}>{interest.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Basics</Text>
-        {BASICS.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.menuItem}>
-            <Text style={styles.menuItemText}>{item.name}</Text>
-            <View style={styles.menuItemRight}>
-              <Text style={styles.menuItemValue}>{item.value}</Text>
-              <ChevronRight size={20} color="#666" />
+          <View style={styles.upgradeContent}>
+            <Crown size={32} color="#FF00FF" />
+            <View style={styles.upgradeInfo}>
+              <Text style={styles.upgradeTitle}>Upgrade to Premium</Text>
+              <Text style={styles.upgradeSubtitle}>
+                Get unlimited matches and more!
+              </Text>
             </View>
-          </TouchableOpacity>
-        ))}
-      </View>
+          </View>
+          <ChevronRight size={24} color="#FF00FF" />
+        </Pressable>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Lifestyle</Text>
-        {LIFESTYLE.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.menuItem}>
-            <Text style={styles.menuItemText}>{item.name}</Text>
-            <View style={styles.menuItemRight}>
-              <Text style={styles.menuItemValue}>{item.value}</Text>
-              <ChevronRight size={20} color="#666" />
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Relationship Goals</Text>
-        <TouchableOpacity style={styles.goalTag}>
-          <Text style={styles.goalText}>Dating 👫</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        <Pressable style={styles.settingsButton}>
+          <Settings size={24} color="#FF00FF" />
+          <Text style={styles.settingsText}>Settings</Text>
+          <ChevronRight size={24} color="#FF00FF" />
+        </Pressable>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000000',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  profileIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  upgradeButton: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  upgradeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  settingsButton: {
-    padding: 8,
-  },
-  completionCard: {
-    margin: 20,
-    padding: 20,
-    backgroundColor: '#8B5CF6',
-    borderRadius: 16,
-  },
-  completionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  completionTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  closeText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  progressCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
-    borderColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  progressDescription: {
+  content: {
     flex: 1,
-    color: '#fff',
-    fontSize: 14,
-    lineHeight: 20,
   },
-  profileCard: {
+  profileHeader: {
     alignItems: 'center',
-    marginBottom: 20,
+    paddingBottom: 24,
   },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  coverImageContainer: {
+    width: '100%',
+    height: 200,
   },
-  editButton: {
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  coverGradient: {
     position: 'absolute',
-    right: '30%',
     bottom: 0,
-    backgroundColor: '#8B5CF6',
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  avatarContainer: {
+    marginTop: -50,
+    position: 'relative',
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#FF00FF',
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
     width: 36,
     height: 36,
     borderRadius: 18,
+    backgroundColor: '#000',
+    borderWidth: 2,
+    borderColor: '#FF00FF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
   },
-  infoSection: {
+  profileInfo: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginTop: 16,
   },
   name: {
+    fontFamily: 'Orbitron-Bold',
     fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    color: '#FF00FF',
+    marginBottom: 4,
   },
   location: {
-    marginLeft: 4,
-    color: '#666',
+    fontFamily: 'Rajdhani',
+    fontSize: 16,
+    color: '#00FFFF',
   },
-  genderRow: {
+  editButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: '#FF00FF',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    gap: 8,
   },
-  gender: {
+  editButtonText: {
+    fontFamily: 'Rajdhani-SemiBold',
     fontSize: 16,
-    color: '#666',
+    color: '#FF00FF',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 24,
+    marginHorizontal: 20,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: '#FF00FF',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 24,
+    color: '#FF00FF',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontFamily: 'Rajdhani',
+    fontSize: 14,
+    color: '#FFF',
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255, 0, 255, 0.2)',
   },
   section: {
     padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
   },
   sectionTitle: {
+    fontFamily: 'Orbitron-Bold',
     fontSize: 18,
-    fontWeight: '600',
+    color: '#FF00FF',
     marginBottom: 12,
+  },
+  bioText: {
+    fontFamily: 'Rajdhani',
+    fontSize: 16,
+    color: '#FFF',
+    lineHeight: 24,
   },
   interestsContainer: {
     flexDirection: 'row',
@@ -299,42 +337,159 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   interestTag: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: '#FF00FF',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
   interestText: {
+    fontFamily: 'Rajdhani',
     fontSize: 14,
+    color: '#FF00FF',
   },
-  menuItem: {
+  upgradeCard: {
+    margin: 20,
+    padding: 20,
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
-  menuItemText: {
-    fontSize: 16,
-  },
-  menuItemRight: {
+  upgradeContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
   },
-  menuItemValue: {
-    fontSize: 16,
-    color: '#666',
-    marginRight: 8,
+  upgradeInfo: {
+    flex: 1,
   },
-  goalTag: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
+  upgradeTitle: {
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 18,
+    color: '#FF00FF',
+    marginBottom: 4,
   },
-  goalText: {
+  upgradeSubtitle: {
+    fontFamily: 'Rajdhani',
     fontSize: 14,
+    color: '#FFF',
+  },
+  settingsButton: {
+    margin: 20,
+    padding: 20,
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: '#FF00FF',
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  settingsText: {
+    flex: 1,
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 16,
+    color: '#FFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 60,
+  },
+  backButton: {
+    marginRight: 16,
+  },
+  backButtonText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 24,
+    color: '#FF00FF',
+  },
+  plansContainer: {
+    padding: 20,
+  },
+  planCard: {
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+  },
+  popularPlan: {
+    borderColor: '#00FFFF',
+    backgroundColor: 'rgba(0, 255, 255, 0.1)',
+  },
+  popularBadge: {
+    position: 'absolute',
+    top: -12,
+    right: 24,
+    backgroundColor: '#00FFFF',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  popularText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 12,
+    color: '#000',
+  },
+  planHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  planName: {
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 24,
+    color: '#FF00FF',
+    marginVertical: 12,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  currency: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 24,
+    color: '#FF00FF',
+  },
+  price: {
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 48,
+    color: '#FF00FF',
+    lineHeight: 48,
+  },
+  interval: {
+    fontFamily: 'Rajdhani',
+    fontSize: 16,
+    color: '#FF00FF',
+    marginBottom: 8,
+  },
+  featuresContainer: {
+    marginBottom: 24,
+  },
+  featureItem: {
+    marginBottom: 12,
+  },
+  featureText: {
+    fontFamily: 'Rajdhani',
+    fontSize: 16,
+    color: '#FFF',
+  },
+  upgradeButton: {
+    backgroundColor: '#FF00FF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  upgradeButtonText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 18,
+    color: '#000',
   },
 });

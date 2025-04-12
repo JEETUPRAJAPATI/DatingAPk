@@ -1,24 +1,31 @@
 import { Tabs } from 'expo-router';
-import { Heart, MessageCircle, User, Users } from 'lucide-react-native';
+import { Search, Heart, MessageCircle, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#FF4B6A',
-        tabBarInactiveTintColor: '#999',
-        tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: '#f0f0f0',
-        },
         headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#000000',
+          borderTopColor: '#FF00FF',
+          borderTopWidth: 1,
+          height: 60,
+        },
+        tabBarActiveTintColor: '#FF00FF',
+        tabBarInactiveTintColor: '#666666',
+        tabBarLabelStyle: {
+          fontFamily: 'Rajdhani-SemiBold',
+          fontSize: 12,
+          marginBottom: 8,
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Discover',
-          tabBarIcon: ({ color, size }) => (
-            <Heart size={size} color={color} />
+          title: 'Explore',
+          tabBarIcon: ({ size, color }) => (
+            <Search size={size} color={color} />
           ),
         }}
       />
@@ -26,16 +33,16 @@ export default function TabLayout() {
         name="matches"
         options={{
           title: 'Matches',
-          tabBarIcon: ({ color, size }) => (
-            <Users size={size} color={color} />
+          tabBarIcon: ({ size, color }) => (
+            <Heart size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="messages"
+        name="chats"
         options={{
-          title: 'Messages',
-          tabBarIcon: ({ color, size }) => (
+          title: 'Chats',
+          tabBarIcon: ({ size, color }) => (
             <MessageCircle size={size} color={color} />
           ),
         }}
@@ -44,7 +51,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ size, color }) => (
             <User size={size} color={color} />
           ),
         }}

@@ -1,297 +1,274 @@
-import { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
-import { ArrowLeft, SlidersHorizontal, MapPin, X, Heart, Star } from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import Animated, { 
-  useAnimatedStyle, 
-  useAnimatedScrollHandler,
+import { useState } from 'react';
+import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useAnimatedStyle,
   useSharedValue,
+  withSpring,
   interpolate,
-  Extrapolate
+  runOnJS,
 } from 'react-native-reanimated';
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
+import { Sparkles, Zap, X } from 'lucide-react-native';
 
-const { width, height } = Dimensions.get('window');
-const HEADER_HEIGHT = height * 0.6;
+const SWIPE_THRESHOLD = 100;
 
-const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+interface Profile {
+  id: string;
+  name: string;
+  age: number;
+  bio: string;
+  image: string;
+  location: string;
+}
 
-export default function DiscoverScreen() {
-  const insets = useSafeAreaInsets();
+const profiles: Profile[] = [
+  {
+    id: '1',
+    name: 'Sarah',
+    age: 28,
+    bio: 'Adventure seeker and coffee enthusiast. Let\'s explore the world together! 🌎✈️',
+    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
+    location: 'New York, NY',
+  },
+  {
+    id: '2',
+    name: 'Alex',
+    age: 26,
+    bio: 'Music lover and amateur photographer. Looking for someone to share concerts and creative moments with. 🎵📸',
+    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop',
+    location: 'Los Angeles, CA',
+  },
+  {
+    id: '3',
+    name: 'Emma',
+    age: 24,
+    bio: 'Yoga instructor and plant mom. Seeking a partner in crime for mindful adventures and lazy Sundays. 🧘‍♀️🌿',
+    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
+    location: 'Miami, FL',
+  },
+];
+
+export default function ExploreScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const scrollY = useSharedValue(0);
+  const [expanded, setExpanded] = useState(false);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
-  const profiles = [
-    {
-      id: '1',
-      name: 'Jessica Parker',
-      age: 23,
-      distance: '1 km',
-      occupation: 'Professional model',
-      location: 'Chicago, IL United States',
-      bio: "My name is Jessica Parker and I enjoy meeting new people and finding ways to help them have an uplifting experience. I enjoy reading..",
-      interests: ['Travelling', 'Books', 'Music', 'Dancing', 'Modeling'],
-      gallery: [
-        'https://images.unsplash.com/photo-1517805686688-47dd930554b2?q=80&w=2574&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1515023115689-589c33041d3c?q=80&w=2564&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=2574&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=2574&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2574&auto=format&fit=crop'
-      ],
-      image: 'https://images.unsplash.com/photo-1517805686688-47dd930554b2?q=80&w=2574&auto=format&fit=crop'
+  const profile = profiles[currentIndex];
+
+  const nextProfile = () => {
+    if (currentIndex < profiles.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      translateX.value = 0;
+      translateY.value = 0;
     }
-  ];
+  };
 
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
+  const gesture = Gesture.Pan()
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+      translateY.value = event.translationY;
+    })
+    .onEnd((event) => {
+      if (Math.abs(event.translationX) > SWIPE_THRESHOLD) {
+        translateX.value = withSpring(event.translationX > 0 ? 500 : -500);
+        runOnJS(nextProfile)();
+      } else {
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+      }
+    });
 
-  const headerStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(
-      scrollY.value,
-      [0, HEADER_HEIGHT],
-      [0, -HEADER_HEIGHT],
-      Extrapolate.CLAMP
+  const cardStyle = useAnimatedStyle(() => {
+    const rotate = interpolate(
+      translateX.value,
+      [-200, 0, 200],
+      [-30, 0, 30]
     );
 
     return {
-      transform: [{ translateY }],
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { rotate: `${rotate}deg` },
+      ],
     };
   });
 
-  const profileContentStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(
-      scrollY.value,
-      [0, HEADER_HEIGHT],
-      [HEADER_HEIGHT, 0],
-      Extrapolate.CLAMP
-    );
-
-    return {
-      transform: [{ translateY }],
-    };
-  });
-
-  const currentProfile = profiles[currentIndex];
+  const handleAction = (action: 'spark' | 'vibe' | 'pass') => {
+    if (action === 'spark') {
+      translateX.value = withSpring(500, {}, () => {
+        runOnJS(nextProfile)();
+      });
+    } else if (action === 'pass') {
+      translateX.value = withSpring(-500, {}, () => {
+        runOnJS(nextProfile)();
+      });
+    } else {
+      // Handle vibe action
+    }
+  };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <GestureHandlerRootView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <ArrowLeft size={24} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.filterButton}
-          onPress={() => router.push('/filter-modal')}
-        >
-          <SlidersHorizontal size={24} color="#000" />
-        </TouchableOpacity>
+        <Text style={styles.title}>Explore</Text>
       </View>
 
-      <View style={styles.mainContainer}>
-        <Animated.View style={[styles.headerImage, headerStyle]}>
-          <Image 
-            source={{ uri: currentProfile.image }}
-            style={styles.backgroundImage}
-          />
-        </Animated.View>
-
-        <AnimatedScrollView
-          style={styles.scrollView}
-          onScroll={scrollHandler}
-          scrollEventThrottle={16}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={{ height: HEADER_HEIGHT }} />
-          
-          <Animated.View style={[styles.profileContent, profileContentStyle]}>
-            <View style={styles.profileInfo}>
-              <Text style={styles.name}>{currentProfile.name}, {currentProfile.age}</Text>
-              <Text style={styles.occupation}>{currentProfile.occupation}</Text>
-              <View style={styles.locationContainer}>
-                <MapPin size={16} color="#666" />
-                <Text style={styles.location}>{currentProfile.location}</Text>
+      <View style={styles.cardContainer}>
+        <GestureDetector gesture={gesture}>
+          <Animated.View style={[styles.card, cardStyle]}>
+            <Image source={{ uri: profile.image }} style={styles.image} />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.8)']}
+              style={styles.gradient}
+            >
+              <View style={styles.profileInfo}>
+                <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+                <Text style={styles.location}>{profile.location}</Text>
               </View>
-            </View>
+            </LinearGradient>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>About</Text>
-              <Text style={styles.bio}>{currentProfile.bio}</Text>
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Interests</Text>
-              <View style={styles.interestsContainer}>
-                {currentProfile.interests.map((interest, index) => (
-                  <View key={index} style={styles.interestTag}>
-                    <Text style={styles.interestText}>{interest}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Gallery</Text>
-                <TouchableOpacity>
-                  <Text style={styles.seeAll}>See all</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.gallery}>
-                {currentProfile.gallery.map((photo, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri: photo }}
-                    style={styles.galleryImage}
-                  />
-                ))}
-              </View>
-            </View>
+            <Pressable
+              style={[styles.bioContainer, expanded && styles.bioExpanded]}
+              onPress={() => setExpanded(!expanded)}
+            >
+              <Text style={styles.bio} numberOfLines={expanded ? undefined : 2}>
+                {profile.bio}
+              </Text>
+            </Pressable>
           </Animated.View>
-        </AnimatedScrollView>
-
-        <View style={styles.actions}>
-          <TouchableOpacity style={[styles.actionButton, styles.dislikeButton]}>
-            <X size={32} color="#FF4B6A" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.actionButton, styles.likeButton]}>
-            <Heart size={32} color="#fff" fill="#fff" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.actionButton, styles.superLikeButton]}>
-            <Star size={32} color="#9B4BFF" />
-          </TouchableOpacity>
-        </View>
+        </GestureDetector>
       </View>
-    </View>
+
+      <View style={styles.actions}>
+        <Pressable
+          style={[styles.actionButton, styles.passButton]}
+          onPress={() => handleAction('pass')}
+        >
+          <X size={32} color="#FF00FF" />
+        </Pressable>
+
+        <Pressable
+          style={[styles.actionButton, styles.vibeButton]}
+          onPress={() => handleAction('vibe')}
+        >
+          <Zap size={32} color="#00FFFF" />
+        </Pressable>
+
+        <Pressable
+          style={[styles.actionButton, styles.sparkButton]}
+          onPress={() => handleAction('spark')}
+        >
+          <Sparkles size={32} color="#39FF14" />
+        </Pressable>
+      </View>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000000',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  filterButton: {
-    padding: 8,
+  title: {
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 32,
+    color: '#FF00FF',
+    textShadowColor: '#FF00FF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
-  mainContainer: {
+  cardContainer: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
-  headerImage: {
-    position: 'absolute',
-    width: '100%',
-    height: HEADER_HEIGHT,
-    zIndex: 1,
-  },
-  backgroundImage: {
+  card: {
     width: '100%',
     height: '100%',
+    borderRadius: 20,
+    backgroundColor: '#1A1A1A',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+    shadowColor: '#FF00FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5,
   },
-  scrollView: {
-    flex: 1,
+  image: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
   },
-  profileContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+  gradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    justifyContent: 'flex-end',
     padding: 20,
-    minHeight: height - HEADER_HEIGHT + 100,
   },
   profileInfo: {
-    marginBottom: 24,
+    marginBottom: 60,
   },
   name: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 28,
+    color: '#FFFFFF',
     marginBottom: 4,
-  },
-  occupation: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    textShadowColor: '#FF00FF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   location: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#666',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
+    fontFamily: 'Rajdhani',
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
+    color: '#00FFFF',
+    textShadowColor: '#00FFFF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  bioContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: 20,
+    borderTopWidth: 1,
+    borderColor: '#FF00FF',
+  },
+  bioExpanded: {
+    height: '50%',
   },
   bio: {
+    fontFamily: 'Rajdhani',
     fontSize: 16,
-    color: '#666',
+    color: '#FFFFFF',
     lineHeight: 24,
-  },
-  interestsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  interestTag: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  interestText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  seeAll: {
-    fontSize: 14,
-    color: '#FF4B6A',
-    fontWeight: '600',
-  },
-  gallery: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  galleryImage: {
-    width: (width - 56) / 3,
-    height: (width - 56) / 3,
-    borderRadius: 12,
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 20,
-    gap: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    backgroundColor: '#fff',
+    padding: 20,
+    paddingBottom: 40,
   },
   actionButton: {
     width: 64,
@@ -299,25 +276,30 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    borderWidth: 2,
+  },
+  passButton: {
+    borderColor: '#FF00FF',
+    shadowColor: '#FF00FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
     elevation: 5,
   },
-  dislikeButton: {
-    backgroundColor: '#fff',
+  vibeButton: {
+    borderColor: '#00FFFF',
+    shadowColor: '#00FFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5,
   },
-  likeButton: {
-    backgroundColor: '#FF4B6A',
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-  },
-  superLikeButton: {
-    backgroundColor: '#fff',
+  sparkButton: {
+    borderColor: '#39FF14',
+    shadowColor: '#39FF14',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5,
   },
 });
