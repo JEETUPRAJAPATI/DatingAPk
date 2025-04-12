@@ -21,7 +21,7 @@ export default function PaymentSuccessScreen() {
           Once you will get access
         </Text>
 
-        <Pressable 
+        <Pressable
           style={styles.button}
           onPress={() => router.replace('/(tabs)')}
         >
