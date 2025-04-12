@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Pressable } from 'react-native';
 import { Settings, CreditCard as Edit3, Crown, ChevronRight, Camera } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 
 interface Plan {
   id: string;
@@ -193,7 +194,10 @@ export default function ProfileScreen() {
           <ChevronRight size={24} color="#FF00FF" />
         </Pressable>
 
-        <Pressable style={styles.settingsButton}>
+        <Pressable 
+          style={styles.settingsButton}
+          onPress={() => router.push('/settings')}
+        >
           <Settings size={24} color="#FF00FF" />
           <Text style={styles.settingsText}>Settings</Text>
           <ChevronRight size={24} color="#FF00FF" />
