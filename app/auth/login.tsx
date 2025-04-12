@@ -14,7 +14,7 @@ export default function LoginScreen() {
     try {
       // Simulate social authentication
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Simulate fetching phone number from social profile
       const mockPhoneNumber = '+1234567890';
       setPhoneNumber(mockPhoneNumber);
@@ -27,7 +27,10 @@ export default function LoginScreen() {
 
   const handleContinue = () => {
     if (phoneNumber.length >= 10) {
-      router.push('/auth/verify');
+      router.push({
+        pathname: '/auth/verify',
+        params: { mode: 'login' }
+      });
     }
   };
 

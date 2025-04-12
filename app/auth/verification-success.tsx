@@ -3,10 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { CircleCheck as CheckCircle2, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { 
-  useAnimatedStyle, 
-  withRepeat, 
-  withSequence, 
+import Animated, {
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
   withTiming,
   withDelay,
   useSharedValue,
@@ -117,7 +117,7 @@ export default function VerificationSuccessScreen() {
         colors={['rgba(255,0,255,0.2)', 'transparent', 'rgba(0,255,255,0.2)']}
         style={styles.gradient}
       />
-      
+
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <CheckCircle2 size={64} color="#39FF14" strokeWidth={1.5} />

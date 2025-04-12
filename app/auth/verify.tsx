@@ -1,18 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 
 export default function VerifyScreen() {
+  const { mode } = useLocalSearchParams<{ mode: 'login' | 'signup' }>();
   const [otp, setOtp] = useState(['', '', '', '']);
   const [timeLeft, setTimeLeft] = useState(60);
-  const [isNewUser, setIsNewUser] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([null, null, null, null]);
-
-  useEffect(() => {
-    // Simulate checking if user exists
-    setIsNewUser(Math.random() > 0.5);
-  }, []);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -34,7 +29,7 @@ export default function VerifyScreen() {
 
   const handleVerify = () => {
     if (otp.join('').length === 4) {
-      if (isNewUser) {
+      if (mode === 'signup') {
         router.push('/auth/gender');
       } else {
         router.push('/auth/verification-success');
@@ -95,7 +90,7 @@ export default function VerifyScreen() {
           <Text style={styles.buttonText}>Verify</Text>
         </Pressable>
 
-        <Pressable 
+        <Pressable
           style={[styles.resendButton, timeLeft > 0 && styles.resendButtonDisabled]}
           onPress={handleResendOTP}
           disabled={timeLeft > 0}
@@ -108,7 +103,6 @@ export default function VerifyScreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -130,9 +124,6 @@ const styles = StyleSheet.create({
     color: '#FF00FF',
     marginBottom: 8,
     textAlign: 'center',
-    textShadowColor: '#FF00FF',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
   subtitle: {
     fontFamily: 'Rajdhani',
@@ -156,15 +147,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 24,
     textAlign: 'center',
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
-  },
-  otpInputFilled: {
-    backgroundColor: 'rgba(255, 0, 255, 0.2)',
-    borderColor: '#39FF14',
-    shadowColor: '#39FF14',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
   },
   button: {
     width: '100%',
@@ -186,20 +168,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
     color: '#000000',
-  },
-  resendButton: {
-    marginTop: 24,
-    padding: 12,
-  },
-  resendButtonDisabled: {
-    opacity: 0.5,
-  },
-  resendText: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 16,
-    color: '#FF00FF',
-  },
-  resendTextDisabled: {
-    color: '#666',
   },
 });

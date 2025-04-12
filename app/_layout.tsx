@@ -33,7 +33,6 @@ export default function RootLayout() {
         <Stack.Screen name="auth/login" />
         <Stack.Screen name="auth/signup" />
         <Stack.Screen name="auth/verify" />
-        <Stack.Screen name="auth/verification-success" />
         <Stack.Screen name="auth/gender" />
         <Stack.Screen name="auth/looking-for" />
         <Stack.Screen name="auth/profile" />

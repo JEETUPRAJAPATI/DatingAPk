@@ -8,7 +8,10 @@ export default function SignupScreen() {
 
   const handleSendOTP = () => {
     if (phoneNumber.length >= 10) {
-      router.push('/auth/verify');
+      router.push({
+        pathname: '/auth/verify',
+        params: { mode: 'signup' }
+      });
     }
   };
 
