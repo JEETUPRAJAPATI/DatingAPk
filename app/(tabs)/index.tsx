@@ -13,8 +13,9 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import { Sparkles, Zap, X, SlidersHorizontal, MapPin } from 'lucide-react-native';
+import { Sparkles, Zap, X, Settings, SlidersHorizontal, MapPin } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
+import { router } from 'expo-router';
 
 const SWIPE_THRESHOLD = 100;
 
@@ -146,9 +147,14 @@ export default function ExploreScreen() {
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Explore</Text>
-        <Pressable onPress={() => setShowFilter(true)} style={styles.filterButton}>
-          <SlidersHorizontal size={24} color="#FF00FF" />
-        </Pressable>
+        <View style={styles.headerButtons}>
+          <Pressable onPress={() => setShowFilter(true)} style={styles.iconButton}>
+            <SlidersHorizontal size={24} color="#FF00FF" />
+          </Pressable>
+          <Pressable onPress={() => router.push('/settings')} style={styles.iconButton}>
+            <Settings size={24} color="#FF00FF" />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.cardContainer}>
@@ -335,15 +341,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  title: {
-    fontFamily: 'Orbitron-Bold',
-    fontSize: 32,
-    color: '#FF00FF',
-    textShadowColor: '#FF00FF',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  filterButton: {
+  iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -352,6 +354,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FF00FF',
+  },
+  title: {
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 32,
+    color: '#FF00FF',
+    textShadowColor: '#FF00FF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   cardContainer: {
     flex: 1,
@@ -468,15 +478,16 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    padding: 20,
   },
   filterContainer: {
     backgroundColor: '#1A1A1A',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
     padding: 20,
-    borderTopWidth: 2,
+    borderWidth: 2,
     borderColor: '#FF00FF',
+    maxHeight: '90%',
   },
   filterHeader: {
     flexDirection: 'row',
@@ -488,6 +499,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Orbitron-Bold',
     fontSize: 24,
     color: '#FF00FF',
+    textShadowColor: '#FF00FF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   closeButton: {
     width: 40,

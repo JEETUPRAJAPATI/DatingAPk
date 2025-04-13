@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TextInput, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TextInput, Pressable, Platform, KeyboardAvoidingView } from 'react-native';
 import { MessageCircle, Phone, Video, Smile, Send, Image as ImageIcon, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -111,21 +111,21 @@ export default function ChatsScreen() {
   if (selectedStory) {
     return (
       <View style={styles.statusContainer}>
-        <Image 
-          source={{ uri: selectedStory.imageUrl }} 
+        <Image
+          source={{ uri: selectedStory.imageUrl }}
           style={styles.statusImage}
         />
         <LinearGradient
           colors={['rgba(0,0,0,0.5)', 'transparent', 'rgba(0,0,0,0.5)']}
           style={styles.statusGradient}
         />
-        
+
         <View style={styles.statusHeader}>
           <View style={styles.statusInfo}>
             <Text style={styles.statusUsername}>{selectedStory.username}</Text>
             <Text style={styles.statusTimestamp}>{selectedStory.timestamp}</Text>
           </View>
-          <Pressable 
+          <Pressable
             style={styles.closeStatus}
             onPress={() => setSelectedStory(null)}
           >
@@ -137,16 +137,20 @@ export default function ChatsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
       {!selectedChat ? (
-        <>
+        <View style={styles.mainContainer}>
           <View style={styles.header}>
             <Text style={styles.title}>Messages</Text>
             <Text style={styles.subtitle}>Your conversations</Text>
           </View>
 
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             style={styles.storiesContainer}
             showsHorizontalScrollIndicator={false}
           >
@@ -157,17 +161,17 @@ export default function ChatsScreen() {
               <Text style={styles.addStoryText}>Add Story</Text>
             </Pressable>
             {stories.map((story) => (
-              <Pressable 
-                key={story.id} 
+              <Pressable
+                key={story.id}
                 style={styles.storyButton}
                 onPress={() => setSelectedStory(story)}
               >
-                <Image 
-                  source={{ uri: story.imageUrl }} 
+                <Image
+                  source={{ uri: story.imageUrl }}
                   style={[
                     styles.storyImage,
                     story.viewed && styles.storyImageViewed,
-                  ]} 
+                  ]}
                 />
               </Pressable>
             ))}
@@ -181,7 +185,7 @@ export default function ChatsScreen() {
                   {chat.online && <View style={styles.onlineIndicator} />}
                 </View>
 
-                <Pressable 
+                <Pressable
                   style={styles.chatInfo}
                   onPress={() => handleChatOpen(chat)}
                 >
@@ -194,7 +198,7 @@ export default function ChatsScreen() {
                     {chat.typing ? (
                       <Text style={styles.typingIndicator}>typing...</Text>
                     ) : (
-                      <Text 
+                      <Text
                         style={styles.lastMessage}
                         numberOfLines={1}
                       >
@@ -210,13 +214,13 @@ export default function ChatsScreen() {
                 </Pressable>
 
                 <View style={styles.chatActions}>
-                  <Pressable 
+                  <Pressable
                     style={styles.actionButton}
                     onPress={() => handleVideoCall(chat)}
                   >
                     <Video size={20} color="#FF00FF" />
                   </Pressable>
-                  <Pressable 
+                  <Pressable
                     style={styles.actionButton}
                     onPress={() => handleChatOpen(chat)}
                   >
@@ -226,11 +230,11 @@ export default function ChatsScreen() {
               </View>
             ))}
           </ScrollView>
-        </>
+        </View>
       ) : (
         <View style={styles.chatScreen}>
           <View style={styles.chatHeader}>
-            <Pressable 
+            <Pressable
               style={styles.backButton}
               onPress={() => setSelectedChat(null)}
             >
@@ -238,7 +242,7 @@ export default function ChatsScreen() {
             </Pressable>
 
             <Image source={{ uri: selectedChat.avatar }} style={styles.chatAvatar} />
-            
+
             <View style={styles.chatHeaderInfo}>
               <Text style={styles.chatHeaderName}>{selectedChat.name}</Text>
               {selectedChat.online && (
@@ -256,7 +260,10 @@ export default function ChatsScreen() {
             </View>
           </View>
 
-          <ScrollView style={styles.messagesContainer}>
+          <ScrollView
+            style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
+          >
             {/* Messages will be rendered here */}
           </ScrollView>
 
@@ -264,7 +271,7 @@ export default function ChatsScreen() {
             <Pressable style={styles.mediaButton}>
               <ImageIcon size={24} color="#FF00FF" />
             </Pressable>
-            
+
             <TextInput
               style={styles.input}
               value={message}
@@ -278,7 +285,7 @@ export default function ChatsScreen() {
               <Smile size={24} color="#FF00FF" />
             </Pressable>
 
-            <Pressable 
+            <Pressable
               style={[styles.sendButton, !message && styles.sendButtonDisabled]}
               onPress={handleSend}
               disabled={!message}
@@ -288,7 +295,7 @@ export default function ChatsScreen() {
           </View>
         </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -297,8 +304,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
+  mainContainer: {
+    flex: 1,
+  },
   header: {
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -319,6 +329,7 @@ const styles = StyleSheet.create({
   storiesContainer: {
     paddingLeft: 20,
     marginBottom: 20,
+    maxHeight: 100,
   },
   addStoryButton: {
     alignItems: 'center',
@@ -438,14 +449,16 @@ const styles = StyleSheet.create({
   },
   chatScreen: {
     flex: 1,
+    backgroundColor: '#000000',
   },
   chatHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 0, 255, 0.2)',
+    backgroundColor: '#000000',
   },
   backButton: {
     marginRight: 16,
@@ -490,15 +503,21 @@ const styles = StyleSheet.create({
   },
   messagesContainer: {
     flex: 1,
+    backgroundColor: '#000000',
+  },
+  messagesContent: {
     padding: 20,
+    minHeight: '100%',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 0, 255, 0.2)',
     gap: 12,
+    backgroundColor: '#000000',
   },
   mediaButton: {
     width: 40,
@@ -557,7 +576,7 @@ const styles = StyleSheet.create({
   },
   statusHeader: {
     position: 'absolute',
-    top: 60,
+    top: Platform.OS === 'ios' ? 60 : 40,
     left: 0,
     right: 0,
     flexDirection: 'row',

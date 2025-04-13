@@ -49,12 +49,26 @@ export default function ProfileScreen() {
   const handleEditProfile = () => {
     router.push('/profile/edit');
   };
+// Update the handleUpgrade function in the ProfileScreen component
+interface Plan {
+  name: string;
+  price: number;
+}
 
+const handleUpgrade = (plan: Plan) => {
+  router.push({
+    pathname: '/payment/method',
+    params: {
+      plan: plan.name,
+      price: plan.price.toString()
+    }
+  });
+};
   if (showUpgrade) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable 
+          <Pressable
             style={styles.backButton}
             onPress={() => setShowUpgrade(false)}
           >
@@ -65,7 +79,7 @@ export default function ProfileScreen() {
 
         <ScrollView style={styles.plansContainer}>
           {plans.map((plan) => (
-            <View 
+            <View
               key={plan.id}
               style={[
                 styles.planCard,
@@ -96,7 +110,9 @@ export default function ProfileScreen() {
                 ))}
               </View>
 
-              <Pressable style={styles.upgradeButton}>
+              <Pressable style={styles.upgradeButton}
+              onPress={() => handleUpgrade({ name: 'Premium', price: 9.99 })}
+             >
                 <Text style={styles.upgradeButtonText}>
                   Choose {plan.name}
                 </Text>
@@ -138,7 +154,7 @@ export default function ProfileScreen() {
             <Text style={styles.location}>New York, NY</Text>
           </View>
 
-          <Pressable 
+          <Pressable
             style={styles.editButton}
             onPress={handleEditProfile}
           >
@@ -182,7 +198,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <Pressable 
+        <Pressable
           style={styles.upgradeCard}
           onPress={() => setShowUpgrade(true)}
         >
@@ -198,7 +214,7 @@ export default function ProfileScreen() {
           <ChevronRight size={24} color="#FF00FF" />
         </Pressable>
 
-        <Pressable 
+        <Pressable
           style={styles.settingsButton}
           onPress={() => router.push('/settings')}
         >
