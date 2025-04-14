@@ -13,7 +13,7 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import { Sparkles, Zap, X, Settings, SlidersHorizontal, MapPin } from 'lucide-react-native';
+import { Sparkles, Zap, X, Settings, SlidersHorizontal, MapPin, MoveVertical as MoreVertical } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { router } from 'expo-router';
 
@@ -66,6 +66,7 @@ export default function ExploreScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     location: 'New York City',
     gender: null,
@@ -129,6 +130,13 @@ export default function ExploreScreen() {
     }
   };
 
+  const handleViewProfile = () => {
+    router.push({
+      pathname: '/profile/view',
+      params: { id: profile.id }
+    });
+  };
+
   const handleResetFilters = () => {
     setFilters({
       location: 'New York City',
@@ -179,6 +187,13 @@ export default function ExploreScreen() {
                 {profile.bio}
               </Text>
             </Pressable>
+
+            <Pressable
+              style={styles.optionsButton}
+              onPress={() => handleViewProfile()}
+            >
+              <MoreVertical size={24} color="#FF00FF" />
+            </Pressable>
           </Animated.View>
         </GestureDetector>
       </View>
@@ -205,6 +220,30 @@ export default function ExploreScreen() {
           <Sparkles size={32} color="#39FF14" />
         </Pressable>
       </View>
+
+      <Modal
+        visible={showOptions}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowOptions(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowOptions(false)}
+        >
+          <View style={styles.optionsMenu}>
+            <Pressable
+              style={styles.optionItem}
+              onPress={() => {
+                setShowOptions(false);
+                handleViewProfile();
+              }}
+            >
+              <Text style={styles.optionText}>View Profile</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={showFilter}
@@ -626,5 +665,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 16,
     color: '#000000',
+  },
+  optionsButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FF00FF',
+  },
+  optionsMenu: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FF00FF',
+    width: '80%',
+    padding: 16,
+  },
+  optionItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,0,255,0.2)',
+  },
+  optionText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 18,
+    color: '#FF00FF',
+    textAlign: 'center',
   },
 });
