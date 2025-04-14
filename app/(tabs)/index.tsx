@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Image, Pressable, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, Modal, TextInput, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
@@ -208,12 +208,18 @@ export default function ExploreScreen() {
 
       <Modal
         visible={showFilter}
-        animationType="slide"
         transparent
+        animationType="slide"
         onRequestClose={() => setShowFilter(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.filterContainer}>
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowFilter(false)}
+        >
+          <Pressable
+            style={styles.filterContainer}
+            onPress={e => e.stopPropagation()}
+          >
             <View style={styles.filterHeader}>
               <Text style={styles.filterTitle}>Filters</Text>
               <Pressable
@@ -224,105 +230,115 @@ export default function ExploreScreen() {
               </Pressable>
             </View>
 
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Location</Text>
-              <Pressable style={styles.locationInput}>
-                <MapPin size={20} color="#FF00FF" />
-                <Text style={styles.locationInputText}>{filters.location}</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Gender</Text>
-              <View style={styles.genderButtons}>
-                {(['female', 'male', 'others'] as const).map((gender) => (
-                  <Pressable
-                    key={gender}
-                    style={[
-                      styles.genderButton,
-                      filters.gender === gender && styles.genderButtonActive,
-                    ]}
-                    onPress={() => setFilters({ ...filters, gender })}
-                  >
-                    <Text style={[
-                      styles.genderButtonText,
-                      filters.gender === gender && styles.genderButtonTextActive,
-                    ]}>
-                      {gender.charAt(0).toUpperCase() + gender.slice(1)}
-                    </Text>
-                  </Pressable>
-                ))}
+            <ScrollView style={styles.filterContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.filterSection}>
+                <Text style={styles.filterLabel}>Location</Text>
+                <View style={styles.locationInput}>
+                  <MapPin size={20} color="#FF00FF" />
+                  <TextInput
+                    style={styles.locationInputText}
+                    value={filters.location}
+                    onChangeText={(text) => setFilters({ ...filters, location: text })}
+                    placeholder="Enter location"
+                    placeholderTextColor="rgba(255, 0, 255, 0.5)"
+                  />
+                </View>
               </View>
-            </View>
 
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Age Range</Text>
-              <Text style={styles.rangeText}>
-                {filters.ageRange[0]} - {filters.ageRange[1]}
-              </Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={18}
-                maximumValue={60}
-                value={filters.ageRange[0]}
-                onValueChange={(value) => setFilters({
-                  ...filters,
-                  ageRange: [Math.round(value), filters.ageRange[1]]
-                })}
-                minimumTrackTintColor="#FF00FF"
-                maximumTrackTintColor="#333"
-                thumbTintColor="#FF00FF"
-              />
-              <Slider
-                style={styles.slider}
-                minimumValue={18}
-                maximumValue={60}
-                value={filters.ageRange[1]}
-                onValueChange={(value) => setFilters({
-                  ...filters,
-                  ageRange: [filters.ageRange[0], Math.round(value)]
-                })}
-                minimumTrackTintColor="#FF00FF"
-                maximumTrackTintColor="#333"
-                thumbTintColor="#FF00FF"
-              />
-            </View>
+              <View style={styles.filterSection}>
+                <Text style={styles.filterLabel}>Gender</Text>
+                <View style={styles.genderButtons}>
+                  {(['female', 'male', 'others'] as const).map((gender) => (
+                    <Pressable
+                      key={gender}
+                      style={[
+                        styles.genderButton,
+                        filters.gender === gender && styles.genderButtonActive,
+                      ]}
+                      onPress={() => setFilters({ ...filters, gender })}
+                    >
+                      <Text style={[
+                        styles.genderButtonText,
+                        filters.gender === gender && styles.genderButtonTextActive,
+                      ]}>
+                        {gender.charAt(0).toUpperCase() + gender.slice(1)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
 
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Distance (km)</Text>
-              <Text style={styles.rangeText}>{filters.distance} km</Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={1}
-                maximumValue={100}
-                value={filters.distance}
-                onValueChange={(value) => setFilters({
-                  ...filters,
-                  distance: Math.round(value)
-                })}
-                minimumTrackTintColor="#FF00FF"
-                maximumTrackTintColor="#333"
-                thumbTintColor="#FF00FF"
-              />
-            </View>
+              <View style={styles.filterSection}>
+                <Text style={styles.filterLabel}>Age Range</Text>
+                <Text style={styles.rangeText}>
+                  {filters.ageRange[0]} - {filters.ageRange[1]} years
+                </Text>
+                <View style={styles.sliderContainer}>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={18}
+                    maximumValue={60}
+                    value={filters.ageRange[0]}
+                    onValueChange={(value) => setFilters({
+                      ...filters,
+                      ageRange: [Math.round(value), filters.ageRange[1]]
+                    })}
+                    minimumTrackTintColor="#FF00FF"
+                    maximumTrackTintColor="rgba(255, 0, 255, 0.2)"
+                    thumbTintColor="#FF00FF"
+                  />
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={18}
+                    maximumValue={60}
+                    value={filters.ageRange[1]}
+                    onValueChange={(value) => setFilters({
+                      ...filters,
+                      ageRange: [filters.ageRange[0], Math.round(value)]
+                    })}
+                    minimumTrackTintColor="#FF00FF"
+                    maximumTrackTintColor="rgba(255, 0, 255, 0.2)"
+                    thumbTintColor="#FF00FF"
+                  />
+                </View>
+              </View>
 
-            <View style={styles.filterActions}>
-              <Pressable
-                style={styles.resetButton}
-                onPress={handleResetFilters}
-              >
-                <Text style={styles.resetButtonText}>Reset</Text>
-              </Pressable>
+              <View style={styles.filterSection}>
+                <Text style={styles.filterLabel}>Distance (km)</Text>
+                <Text style={styles.rangeText}>{filters.distance} km</Text>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={1}
+                  maximumValue={100}
+                  value={filters.distance}
+                  onValueChange={(value) => setFilters({
+                    ...filters,
+                    distance: Math.round(value)
+                  })}
+                  minimumTrackTintColor="#FF00FF"
+                  maximumTrackTintColor="rgba(255, 0, 255, 0.2)"
+                  thumbTintColor="#FF00FF"
+                />
+              </View>
 
-              <Pressable
-                style={styles.applyButton}
-                onPress={handleApplyFilters}
-              >
-                <Text style={styles.applyButtonText}>Apply Filter</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
+              <View style={styles.filterActions}>
+                <Pressable
+                  style={styles.resetButton}
+                  onPress={handleResetFilters}
+                >
+                  <Text style={styles.resetButtonText}>Reset</Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.applyButton}
+                  onPress={handleApplyFilters}
+                >
+                  <Text style={styles.applyButtonText}>Apply Filter</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </Pressable>
+        </Pressable>
       </Modal>
     </GestureHandlerRootView>
   );
@@ -477,15 +493,14 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'flex-end',
   },
   filterContainer: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    borderWidth: 1,
     borderColor: '#FF00FF',
     maxHeight: '90%',
   },
@@ -493,7 +508,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 0, 255, 0.2)',
   },
   filterTitle: {
     fontFamily: 'Orbitron-Bold',
@@ -512,6 +529,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FF00FF',
+  },
+  filterContent: {
+    padding: 20,
   },
   filterSection: {
     marginBottom: 24,
@@ -533,6 +553,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   locationInputText: {
+    flex: 1,
     fontFamily: 'Rajdhani',
     fontSize: 16,
     color: '#FFFFFF',
@@ -567,6 +588,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 8,
   },
+  sliderContainer: {
+    gap: 16,
+  },
   slider: {
     width: '100%',
     height: 40,
@@ -575,6 +599,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginTop: 12,
+    marginBottom: 20,
   },
   resetButton: {
     flex: 1,
