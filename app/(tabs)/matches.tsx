@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable, ScrollView } from 'react-native';
-import { Video, MessageSquare, Gamepad2, Heart } from 'lucide-react-native';
+import { Video, MessageCircle, Gamepad2, Heart, MoveVertical as MoreVertical } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import DateGame from '@/components/DateGame';
 import GameResults from '@/components/GameResults';
 
@@ -18,7 +19,7 @@ interface Match {
 const matches: Match[] = [
   {
     id: '1',
-    name: 'Emma',
+    name: 'Yashwant',
     age: 24,
     image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
     matchPercentage: 95,
@@ -27,7 +28,7 @@ const matches: Match[] = [
   },
   {
     id: '2',
-    name: 'Sarah',
+    name: 'Arju Pradhan',
     age: 28,
     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
     matchPercentage: 88,
@@ -43,51 +44,23 @@ const matches: Match[] = [
     lastActive: 'Just now',
     status: 'online',
   },
-];
-
-interface GameStage {
-  id: string;
-  title: string;
-  description: string;
-  icon: JSX.Element;
-  color: string;
-}
-
-const gameStages: GameStage[] = [
-  {
-    id: 'icebreakers',
-    title: 'Icebreakers',
-    description: 'Fun and light questions to get started',
-    icon: <Heart size={24} color="#FF69B4" />,
-    color: '#FF69B4',
+   {
+    id: '4',
+    name: 'Faran',
+    age: 26,
+    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
+    matchPercentage: 92,
+    lastActive: 'Just now',
+    status: 'online',
   },
-  {
-    id: 'values',
-    title: 'Values & Lifestyle',
-    description: 'Discover shared principles and habits',
-    icon: <Heart size={24} color="#4169E1" />,
-    color: '#4169E1',
-  },
-  {
-    id: 'feelings',
-    title: 'Feelings & Memories',
-    description: 'Share emotional experiences',
-    icon: <Heart size={24} color="#9370DB" />,
-    color: '#9370DB',
-  },
-  {
-    id: 'flirting',
-    title: 'Flirting & Attraction',
-    description: 'Explore romantic chemistry',
-    icon: <Heart size={24} color="#FF1493" />,
-    color: '#FF1493',
-  },
-  {
-    id: 'intimacy',
-    title: 'Emotional Intimacy',
-    description: 'Deep and meaningful connection',
-    icon: <Heart size={24} color="#FF4500" />,
-    color: '#FF4500',
+   {
+    id: '5',
+    name: 'Nidhi',
+    age: 26,
+    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
+    matchPercentage: 92,
+    lastActive: 'Just now',
+    status: 'online',
   },
 ];
 
@@ -129,6 +102,13 @@ export default function MatchesScreen() {
     setGameResults(null);
   };
 
+  const handleViewProfile = (match: Match) => {
+    router.push({
+      pathname: '/profile/view',
+      params: { id: match.id }
+    });
+  };
+
   return (
     <View style={styles.container}>
       {!gameStarted && !gameResults ? (
@@ -146,7 +126,7 @@ export default function MatchesScreen() {
                   colors={['transparent', 'rgba(0,0,0,0.8)']}
                   style={styles.gradient}
                 />
-                
+
                 <View style={styles.matchInfo}>
                   <View>
                     <Text style={styles.matchName}>
@@ -167,13 +147,20 @@ export default function MatchesScreen() {
                   </View>
                 </View>
 
+                <Pressable
+                  style={styles.optionsButton}
+                  onPress={() => handleViewProfile(match)}
+                >
+                  <MoreVertical size={24} color="#FF00FF" />
+                </Pressable>
+
                 <View style={styles.actionButtons}>
                   <Pressable style={styles.actionButton}>
                     <Video size={24} color="#FF00FF" />
                     <Text style={styles.actionText}>Video</Text>
                   </Pressable>
 
-                  <Pressable 
+                  <Pressable
                     style={styles.actionButton}
                     onPress={() => handleGameInvite(match)}
                   >
@@ -182,53 +169,13 @@ export default function MatchesScreen() {
                   </Pressable>
 
                   <Pressable style={styles.actionButton}>
-                    <MessageSquare size={24} color="#39FF14" />
+                    <MessageCircle size={24} color="#39FF14" />
                     <Text style={styles.actionText}>Chat</Text>
                   </Pressable>
                 </View>
               </View>
             ))}
           </ScrollView>
-
-          {showGameStages && selectedMatch && (
-            <View style={styles.gameModal}>
-              <View style={styles.gameModalContent}>
-                <Text style={styles.gameModalTitle}>
-                  Date Game with {selectedMatch.name}
-                </Text>
-                <Text style={styles.gameModalSubtitle}>
-                  Choose a stage to begin
-                </Text>
-
-                <ScrollView style={styles.stagesList} showsVerticalScrollIndicator={false}>
-                  {gameStages.map((stage) => (
-                    <Pressable
-                      key={stage.id}
-                      style={[styles.stageCard, { borderColor: stage.color }]}
-                      onPress={() => handleStageSelect(stage.id)}
-                    >
-                      <View style={[styles.stageIcon, { backgroundColor: stage.color }]}>
-                        {stage.icon}
-                      </View>
-                      <View style={styles.stageInfo}>
-                        <Text style={styles.stageTitle}>{stage.title}</Text>
-                        <Text style={styles.stageDescription}>
-                          {stage.description}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-
-                <Pressable
-                  style={styles.closeButton}
-                  onPress={handleCloseGame}
-                >
-                  <Text style={styles.closeButtonText}>Close</Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
         </>
       ) : gameResults ? (
         <GameResults
@@ -364,81 +311,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 4,
   },
-  gameModal: {
+  optionsButton: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  gameModalContent: {
-    backgroundColor: '#1A1A1A',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: '#FF00FF',
-  },
-  gameModalTitle: {
-    fontFamily: 'Orbitron-Bold',
-    fontSize: 24,
-    color: '#FF00FF',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  gameModalSubtitle: {
-    fontFamily: 'Rajdhani',
-    fontSize: 16,
-    color: '#00FFFF',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  stagesList: {
-    maxHeight: 400,
-  },
-  stageCard: {
-    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    marginBottom: 12,
     borderWidth: 1,
-  },
-  stageIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  stageInfo: {
-    flex: 1,
-  },
-  stageTitle: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 18,
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  stageDescription: {
-    fontFamily: 'Rajdhani',
-    fontSize: 14,
-    color: '#CCCCCC',
-  },
-  closeButton: {
-    backgroundColor: '#FF00FF',
-    borderRadius: 20,
-    padding: 12,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  closeButtonText: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 16,
-    color: '#000000',
+    borderColor: '#FF00FF',
   },
 });

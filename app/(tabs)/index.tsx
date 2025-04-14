@@ -60,6 +60,22 @@ const profiles: Profile[] = [
     image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
     location: 'Miami, FL',
   },
+   {
+    id: '4',
+    name: 'Nidhi',
+    age: 24,
+    bio: 'Yoga instructor and plant mom. Seeking a partner in crime for mindful adventures and lazy Sundays. 🧘‍♀️🌿',
+    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
+    location: 'Miami, FL',
+  },
+   {
+    id: '5',
+    name: 'Yashwant Gupta',
+    age: 24,
+    bio: 'Yoga instructor and plant mom. Seeking a partner in crime for mindful adventures and lazy Sundays. 🧘‍♀️🌿',
+    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
+    location: 'Miami, FL',
+  },
 ];
 
 export default function ExploreScreen() {
