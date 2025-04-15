@@ -1,301 +1,215 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TextInput, Pressable, Platform, KeyboardAvoidingView } from 'react-native';
-import { MessageCircle, Phone, Video, Smile, Send, Image as ImageIcon, X } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Image, Modal } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { ArrowLeft, Send, Smile, Image as ImageIcon, X, Paperclip } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import EmojiPicker from '@/components/EmojiPicker';
 
-interface Story {
+interface Message {
   id: string;
-  userId: string;
-  imageUrl: string;
-  viewed: boolean;
+  text: string;
+  image?: string;
+  sender: 'user' | 'other';
   timestamp: string;
-  username: string;
 }
 
-interface Chat {
-  id: string;
-  userId: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  online: boolean;
-  typing: boolean;
-}
-
-const stories: Story[] = [
+const initialMessages: Message[] = [
   {
     id: '1',
-    userId: '1',
-    imageUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-    viewed: false,
-    timestamp: '2h ago',
-    username: 'Emma'
+    text: 'Hey there! How are you?',
+    sender: 'other',
+    timestamp: '10:30 AM'
   },
   {
     id: '2',
-    userId: '2',
-    imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-    viewed: false,
-    timestamp: '3h ago',
-    username: 'Sarah'
+    text: 'I AM doing great! How about you?',
+    sender: 'user',
+    timestamp: '10:31 AM'
   },
   {
     id: '3',
-    userId: '3',
-    imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
-    viewed: true,
-    timestamp: '5h ago',
-    username: 'Jessica'
-  },
+    text: 'Would love to grab coffee sometime! ☕️',
+    sender: 'other',
+    timestamp: '10:32 AM'
+  }
 ];
 
-const chats: Chat[] = [
-  {
-    id: '1',
-    userId: '1',
-    name: 'Emma',
-    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-    lastMessage: 'Would love to grab coffee sometime! ☕️',
-    timestamp: '2m ago',
-    unread: 2,
-    online: true,
-    typing: true,
-  },
-  {
-    id: '2',
-    userId: '2',
-    name: 'Sarah',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-    lastMessage: 'That sounds amazing! 😊',
-    timestamp: '1h ago',
-    unread: 0,
-    online: true,
-    typing: false,
-  },
-  {
-    id: '3',
-    userId: '3',
-    name: 'Jessica',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
-    lastMessage: 'Looking forward to our date!',
-    timestamp: '2h ago',
-    unread: 1,
-    online: false,
-    typing: false,
-  },
-];
-
-export default function ChatsScreen() {
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+export default function ChatScreen() {
+  const { id } = useLocalSearchParams();
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [message, setMessage] = useState('');
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
-
-  const handleVideoCall = (chat: Chat) => {
-    router.push(`/video/${chat.id}`);
-  };
-
-  const handleChatOpen = (chat: Chat) => {
-    setSelectedChat(chat);
-  };
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachments, setShowAttachments] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleSend = () => {
     if (message.trim()) {
-      // Handle sending message
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: message,
+        sender: 'user',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages([...messages, newMessage]);
       setMessage('');
+      scrollViewRef.current?.scrollToEnd({ animated: true });
     }
   };
 
-  if (selectedStory) {
-    return (
-      <View style={styles.statusContainer}>
-        <Image
-          source={{ uri: selectedStory.imageUrl }}
-          style={styles.statusImage}
-        />
-        <LinearGradient
-          colors={['rgba(0,0,0,0.5)', 'transparent', 'rgba(0,0,0,0.5)']}
-          style={styles.statusGradient}
-        />
+  const handleEmojiSelect = (emoji: string) => {
+    setMessage(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
 
-        <View style={styles.statusHeader}>
-          <View style={styles.statusInfo}>
-            <Text style={styles.statusUsername}>{selectedStory.username}</Text>
-            <Text style={styles.statusTimestamp}>{selectedStory.timestamp}</Text>
-          </View>
-          <Pressable
-            style={styles.closeStatus}
-            onPress={() => setSelectedStory(null)}
-          >
-            <X size={24} color="#FFFFFF" />
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
+  const handleAttachment = async (type: 'camera' | 'gallery' | 'document') => {
+    setShowAttachments(false);
+
+    if (type === 'gallery') {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          text: '',
+          image: result.assets[0].uri,
+          sender: 'user',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages([...messages, newMessage]);
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }
+    }
+  };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      {!selectedChat ? (
-        <View style={styles.mainContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Messages</Text>
-            <Text style={styles.subtitle}>Your conversations</Text>
-          </View>
-
-          <ScrollView
-            horizontal
-            style={styles.storiesContainer}
-            showsHorizontalScrollIndicator={false}
-          >
-            <Pressable style={styles.addStoryButton}>
-              <View style={styles.addStoryIcon}>
-                <Text style={styles.plusIcon}>+</Text>
-              </View>
-              <Text style={styles.addStoryText}>Add Story</Text>
-            </Pressable>
-            {stories.map((story) => (
-              <Pressable
-                key={story.id}
-                style={styles.storyButton}
-                onPress={() => setSelectedStory(story)}
-              >
-                <Image
-                  source={{ uri: story.imageUrl }}
-                  style={[
-                    styles.storyImage,
-                    story.viewed && styles.storyImageViewed,
-                  ]}
-                />
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          <ScrollView style={styles.chatsList}>
-            {chats.map((chat) => (
-              <View key={chat.id} style={styles.chatItem}>
-                <View style={styles.avatarContainer}>
-                  <Image source={{ uri: chat.avatar }} style={styles.avatar} />
-                  {chat.online && <View style={styles.onlineIndicator} />}
-                </View>
-
-                <Pressable
-                  style={styles.chatInfo}
-                  onPress={() => handleChatOpen(chat)}
-                >
-                  <View style={styles.chatHeader}>
-                    <Text style={styles.chatName}>{chat.name}</Text>
-                    <Text style={styles.timestamp}>{chat.timestamp}</Text>
-                  </View>
-
-                  <View style={styles.chatPreview}>
-                    {chat.typing ? (
-                      <Text style={styles.typingIndicator}>typing...</Text>
-                    ) : (
-                      <Text
-                        style={styles.lastMessage}
-                        numberOfLines={1}
-                      >
-                        {chat.lastMessage}
-                      </Text>
-                    )}
-                    {chat.unread > 0 && (
-                      <View style={styles.unreadBadge}>
-                        <Text style={styles.unreadCount}>{chat.unread}</Text>
-                      </View>
-                    )}
-                  </View>
-                </Pressable>
-
-                <View style={styles.chatActions}>
-                  <Pressable
-                    style={styles.actionButton}
-                    onPress={() => handleVideoCall(chat)}
-                  >
-                    <Video size={20} color="#FF00FF" />
-                  </Pressable>
-                  <Pressable
-                    style={styles.actionButton}
-                    onPress={() => handleChatOpen(chat)}
-                  >
-                    <MessageCircle size={20} color="#FF00FF" />
-                  </Pressable>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <ArrowLeft size={24} color="#FF00FF" />
+        </Pressable>
+        <Image
+          source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop' }}
+          style={styles.avatar}
+        />
+        <View style={styles.headerInfo}>
+          <Text style={styles.name}>Sarah Parker</Text>
+          <Text style={styles.status}>Online</Text>
         </View>
-      ) : (
-        <View style={styles.chatScreen}>
-          <View style={styles.chatHeader}>
-            <Pressable
-              style={styles.backButton}
-              onPress={() => setSelectedChat(null)}
-            >
-              <Text style={styles.backButtonText}>←</Text>
-            </Pressable>
+      </View>
 
-            <Image source={{ uri: selectedChat.avatar }} style={styles.chatAvatar} />
-
-            <View style={styles.chatHeaderInfo}>
-              <Text style={styles.chatHeaderName}>{selectedChat.name}</Text>
-              {selectedChat.online && (
-                <Text style={styles.onlineStatus}>Online</Text>
-              )}
-            </View>
-
-            <View style={styles.chatActions}>
-              <Pressable style={styles.actionButton}>
-                <Phone size={24} color="#FF00FF" />
-              </Pressable>
-              <Pressable style={styles.actionButton}>
-                <Video size={24} color="#FF00FF" />
-              </Pressable>
-            </View>
-          </View>
-
-          <ScrollView
-            style={styles.messagesContainer}
-            contentContainerStyle={styles.messagesContent}
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+      >
+        {messages.map((msg) => (
+          <View
+            key={msg.id}
+            style={[
+              styles.messageWrapper,
+              msg.sender === 'user' ? styles.userMessage : styles.otherMessage
+            ]}
           >
-            {/* Messages will be rendered here */}
-          </ScrollView>
+            {msg.image ? (
+              <Image source={{ uri: msg.image }} style={styles.messageImage} />
+            ) : (
+              <Text style={styles.messageText}>{msg.text}</Text>
+            )}
+            <Text style={styles.timestamp}>{msg.timestamp}</Text>
+          </View>
+        ))}
+      </ScrollView>
 
-          <View style={styles.inputContainer}>
-            <Pressable style={styles.mediaButton}>
-              <ImageIcon size={24} color="#FF00FF" />
-            </Pressable>
+      <View style={styles.inputContainer}>
+        <Pressable
+          style={styles.attachButton}
+          onPress={() => setShowAttachments(true)}
+        >
+          <Paperclip size={24} color="#FF00FF" />
+        </Pressable>
 
-            <TextInput
-              style={styles.input}
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Type a message..."
-              placeholderTextColor="#666"
-              multiline
-            />
+        <TextInput
+          style={styles.input}
+          value={message}
+          onChangeText={setMessage}
+          placeholder="Type a message..."
+          placeholderTextColor="#666"
+          multiline
+        />
 
-            <Pressable style={styles.emojiButton}>
-              <Smile size={24} color="#FF00FF" />
+        <Pressable
+          style={styles.emojiButton}
+          onPress={() => setShowEmojiPicker(true)}
+        >
+          <Smile size={24} color="#FF00FF" />
+        </Pressable>
+
+        <Pressable
+          style={[styles.sendButton, !message && styles.sendButtonDisabled]}
+          onPress={handleSend}
+          disabled={!message}
+        >
+          <Send size={24} color={message ? '#000' : '#666'} />
+        </Pressable>
+      </View>
+
+      <Modal
+        visible={showEmojiPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEmojiPicker(false)}
+      >
+        <EmojiPicker onSelect={handleEmojiSelect} onClose={() => setShowEmojiPicker(false)} />
+      </Modal>
+
+      <Modal
+        visible={showAttachments}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAttachments(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowAttachments(false)}
+        >
+          <View style={styles.attachmentsMenu}>
+            <Text style={styles.attachmentsTitle}>Share Content</Text>
+
+            <Pressable
+              style={styles.attachmentOption}
+              onPress={() => handleAttachment('camera')}
+            >
+              <Text style={styles.attachmentText}>Camera</Text>
             </Pressable>
 
             <Pressable
-              style={[styles.sendButton, !message && styles.sendButtonDisabled]}
-              onPress={handleSend}
-              disabled={!message}
+              style={styles.attachmentOption}
+              onPress={() => handleAttachment('gallery')}
             >
-              <Send size={24} color={message ? '#000' : '#666'} />
+              <Text style={styles.attachmentText}>Photo & Video Library</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.attachmentOption}
+              onPress={() => handleAttachment('document')}
+            >
+              <Text style={styles.attachmentText}>Document</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.cancelButton}
+              onPress={() => setShowAttachments(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
             </Pressable>
           </View>
-        </View>
-      )}
-    </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
+    </View>
   );
 }
 
@@ -304,222 +218,83 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
-  mainContainer: {
-    flex: 1,
-  },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  title: {
-    fontFamily: 'Orbitron-Bold',
-    fontSize: 32,
-    color: '#FF00FF',
-    textShadowColor: '#FF00FF',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-  subtitle: {
-    fontFamily: 'Rajdhani',
-    fontSize: 18,
-    color: '#00FFFF',
-    marginTop: 4,
-  },
-  storiesContainer: {
-    paddingLeft: 20,
-    marginBottom: 20,
-    maxHeight: 100,
-  },
-  addStoryButton: {
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  addStoryIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: '#FF00FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  plusIcon: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 32,
-    color: '#FF00FF',
-  },
-  addStoryText: {
-    fontFamily: 'Rajdhani',
-    fontSize: 12,
-    color: '#FF00FF',
-  },
-  storyButton: {
-    marginRight: 16,
-  },
-  storyImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: '#FF00FF',
-  },
-  storyImageViewed: {
-    borderColor: '#666',
-  },
-  chatsList: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 0, 255, 0.2)',
-  },
-  avatarContainer: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  onlineIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#39FF14',
-    borderWidth: 2,
-    borderColor: '#000',
-  },
-  chatInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  chatHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  chatName: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 18,
-    color: '#FFF',
-  },
-  timestamp: {
-    fontFamily: 'Rajdhani',
-    fontSize: 14,
-    color: '#666',
-  },
-  chatPreview: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  lastMessage: {
-    fontFamily: 'Rajdhani',
-    fontSize: 16,
-    color: '#CCC',
-    flex: 1,
-  },
-  typingIndicator: {
-    fontFamily: 'Rajdhani',
-    fontSize: 16,
-    color: '#FF00FF',
-    fontStyle: 'italic',
-  },
-  unreadBadge: {
-    backgroundColor: '#FF00FF',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
-  },
-  unreadCount: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 12,
-    color: '#000',
-  },
-  chatScreen: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  chatHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: 60,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 0, 255, 0.2)',
-    backgroundColor: '#000000',
   },
   backButton: {
     marginRight: 16,
   },
-  backButtonText: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 24,
-    color: '#FF00FF',
-  },
-  chatAvatar: {
+  avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    marginRight: 12,
   },
-  chatHeaderInfo: {
+  headerInfo: {
     flex: 1,
-    marginLeft: 12,
   },
-  chatHeaderName: {
-    fontFamily: 'Rajdhani-SemiBold',
+  name: {
+    fontFamily: 'Orbitron-Bold',
     fontSize: 18,
-    color: '#FFF',
+    color: '#FFFFFF',
   },
-  onlineStatus: {
+  status: {
     fontFamily: 'Rajdhani',
     fontSize: 14,
     color: '#39FF14',
   },
-  chatActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#FF00FF',
-  },
   messagesContainer: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   messagesContent: {
     padding: 20,
-    minHeight: '100%',
+  },
+  messageWrapper: {
+    maxWidth: '80%',
+    marginBottom: 16,
+    borderRadius: 16,
+    padding: 12,
+  },
+  userMessage: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#FF00FF',
+  },
+  otherMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 0, 255, 0.2)',
+  },
+  messageText: {
+    fontFamily: 'Rajdhani',
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  messageImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 8,
+  },
+  timestamp: {
+    fontFamily: 'Rajdhani',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginTop: 4,
+    alignSelf: 'flex-end',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    paddingBottom: 34,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 0, 255, 0.2)',
     gap: 12,
-    backgroundColor: '#000000',
   },
-  mediaButton: {
+  attachButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -558,53 +333,45 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: 'rgba(255, 0, 255, 0.2)',
   },
-  statusContainer: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'flex-end',
   },
-  statusImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  statusGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  statusHeader: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : 40,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  attachmentsMenu: {
+    backgroundColor: '#1A1A1A',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
+    borderWidth: 1,
+    borderColor: '#FF00FF',
   },
-  statusInfo: {
-    flex: 1,
-  },
-  statusUsername: {
+  attachmentsTitle: {
     fontFamily: 'Orbitron-Bold',
+    fontSize: 20,
+    color: '#FF00FF',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  attachmentOption: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 0, 255, 0.2)',
+  },
+  attachmentText: {
+    fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
     color: '#FFFFFF',
-    marginBottom: 4,
+    textAlign: 'center',
   },
-  statusTimestamp: {
-    fontFamily: 'Rajdhani',
-    fontSize: 14,
-    color: '#FFFFFF',
-    opacity: 0.8,
+  cancelButton: {
+    marginTop: 16,
+    paddingVertical: 16,
   },
-  closeStatus: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  cancelButtonText: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 18,
+    color: '#FF00FF',
+    textAlign: 'center',
   },
 });

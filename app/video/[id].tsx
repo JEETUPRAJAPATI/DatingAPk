@@ -4,7 +4,7 @@ import { Video, Mic, MicOff, VideoOff, PhoneOff } from 'lucide-react-native';
 
 export default function VideoCallScreen() {
   const { id } = useLocalSearchParams();
-  
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -25,7 +25,7 @@ export default function VideoCallScreen() {
           <Video size={24} color="#FFFFFF" />
         </Pressable>
 
-        <Pressable 
+        <Pressable
           style={[styles.controlButton, styles.endCallButton]}
           onPress={() => router.back()}
         >
