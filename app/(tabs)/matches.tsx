@@ -77,6 +77,19 @@ export default function MatchesScreen() {
   const handleGameInvite = (match: Match) => {
     setSelectedMatch(match);
     setShowGameStages(true);
+    setSelectedStage('icebreakers'); // Set default stage
+    setGameStarted(true);
+  };
+
+  const handleVideoCall = (match: Match) => {
+    router.push(`/video/${match.id}`);
+  };
+
+  const handleChat = (match: Match) => {
+    router.push({
+      pathname: '/(tabs)/chats',
+      params: { matchId: match.id }
+    });
   };
 
   const handleStageSelect = (stageId: string) => {
@@ -155,20 +168,26 @@ export default function MatchesScreen() {
                 </Pressable>
 
                 <View style={styles.actionButtons}>
-                  <Pressable style={styles.actionButton}>
+                  <Pressable
+                    style={styles.actionButton}
+                    onPress={() => handleVideoCall(match)}
+                  >
                     <Video size={24} color="#FF00FF" />
                     <Text style={styles.actionText}>Video</Text>
                   </Pressable>
 
                   <Pressable
-                    style={styles.actionButton}
+                    style={[styles.actionButton, styles.playButton]}
                     onPress={() => handleGameInvite(match)}
                   >
                     <Gamepad2 size={24} color="#00FFFF" />
                     <Text style={styles.actionText}>Play</Text>
                   </Pressable>
 
-                  <Pressable style={styles.actionButton}>
+                  <Pressable
+                    style={styles.actionButton}
+                    onPress={() => handleChat(match)}
+                  >
                     <MessageCircle size={24} color="#39FF14" />
                     <Text style={styles.actionText}>Chat</Text>
                   </Pressable>
@@ -304,6 +323,9 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     alignItems: 'center',
+  },
+  playButton: {
+    transform: [{ scale: 1.1 }],
   },
   actionText: {
     fontFamily: 'Rajdhani',

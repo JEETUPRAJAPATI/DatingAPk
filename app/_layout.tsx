@@ -1,13 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts, Orbitron_400Regular, Orbitron_700Bold } from '@expo-google-fonts/orbitron';
 import { Rajdhani_400Regular, Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani';
-import { SplashScreen } from 'expo-router';
+import SplashScreen from '@/components/SplashScreen';
 
 export default function RootLayout() {
   useFrameworkReady();
+  const [showSplash, setShowSplash] = useState(true);
 
   const [fontsLoaded, fontError] = useFonts({
     'Orbitron': Orbitron_400Regular,
@@ -18,12 +19,16 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      // Fonts are loaded, but keep showing splash for animation
     }
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
     return null;
+  }
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
   return (
