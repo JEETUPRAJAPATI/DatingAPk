@@ -66,17 +66,20 @@ export default function ChatsScreen() {
         <Text style={styles.subtitle}>Your conversations</Text>
       </View>
 
-      <ScrollView horizontal style={styles.storiesContainer} showsHorizontalScrollIndicator={false}>
-        <View style={styles.addStoryButton}>
-          <Text style={styles.addStoryPlus}>+</Text>
-          <Text style={styles.addStoryText}>Add Story</Text>
-        </View>
-        {users.map(user => (
-          <View key={user.id} style={styles.storyItem}>
-            <Image source={{ uri: user.image }} style={styles.storyImage} />
+      <View style={styles.storiesWrapper}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesContainer}>
+          <View style={styles.addStoryButton}>
+            <Text style={styles.addStoryPlus}>+</Text>
+            <Text style={styles.addStoryText}>Add Story</Text>
           </View>
-        ))}
-      </ScrollView>
+          {users.map(user => (
+            <View key={user.id} style={styles.storyItem}>
+              <Image source={{ uri: user.image }} style={styles.storyImage} />
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
 
       <View style={styles.searchContainer}>
         <Search size={20} color="#FF00FF" />
@@ -147,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   header: {
-    paddingTop: 60,
+    paddingTop: 35,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -165,10 +168,15 @@ const styles = StyleSheet.create({
     color: '#00FFFF',
     marginTop: 4,
   },
-  storiesContainer: {
+  storiesWrapper: {
+    height: 100,
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 10,
   },
+  storiesContainer: {
+    alignItems: 'center',
+  },
+
   addStoryButton: {
     width: 70,
     height: 70,

@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet, Pressable, Modal } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Modal } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { Info, FileText, Shield, Trash2, Star, LogOut, ArrowLeft } from 'lucide-react-native';
+import { Info, FileText, Shield, Trash2, Star, LogOut } from 'lucide-react-native';
 
 interface SettingItem {
   icon: JSX.Element;
@@ -55,13 +55,10 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#FF00FF" />
-        </Pressable>
         <Text style={styles.title}>Settings</Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content}>
         {settings.map((item, index) => (
           <Pressable
             key={index}
@@ -80,7 +77,7 @@ export default function SettingsScreen() {
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       <Modal
         visible={showLogoutModal}
@@ -120,17 +117,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
-    gap: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
   },
   title: {
     fontFamily: 'Orbitron-Bold',

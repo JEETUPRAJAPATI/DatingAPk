@@ -5,6 +5,7 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts, Orbitron_400Regular, Orbitron_700Bold } from '@expo-google-fonts/orbitron';
 import { Rajdhani_400Regular, Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani';
 import SplashScreen from '@/components/SplashScreen';
+import Toast from 'react-native-toast-message';
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -45,6 +46,7 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="light" />
+      <Toast />
     </>
   );
 }

@@ -3,12 +3,16 @@ import { View, Text, StyleSheet, TextInput, Pressable, Image, Platform } from 'r
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { API_BASE_URL } from '../apiUrl';
+import Toast from 'react-native-toast-message';
 
 type SocialProvider = 'google' | 'facebook' | 'apple';
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const apiUrl = API_BASE_URL;
+  console.log('API URL:', apiUrl);
 
   const handleSocialLogin = async (provider: SocialProvider) => {
     setIsLoading(true);
@@ -26,12 +30,56 @@ export default function LoginScreen() {
     }
   };
 
-  const handleContinue = () => {
-    if (phoneNumber.length >= 10) {
-      router.push({
-        pathname: '/auth/verify',
-        params: { mode: 'login' }
+  // const handleLoginwithNumber = async () => {
+  //   if (phoneNumber.length >= 10) {
+  //     router.push({
+  //       pathname: '/auth/verify',
+  //       params: { mode: 'login' }
+  //     });
+  //   }
+  // };
+
+  const handleLoginwithNumber = async () => {
+    try {
+      const res = await fetch(`${apiUrl}/auth/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mobile: phoneNumber }),
       });
+
+      const data = await res.json();
+
+      console.log('Login rsponse:', data);
+      if (data.status) {
+        Toast.show({
+          type: 'success',
+          text1: 'OTP Sent',
+          text2: 'Please check your phone for the OTP.',
+          position: 'top',
+        })
+        router.push({
+          pathname: '/auth/verify',
+          params: { mode: 'login', mobile: phoneNumber }
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: data.errors[0].message,
+          position: 'top',
+        })
+      }
+
+    } catch (error) {
+      console.error('Login error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: 'An error occurred while sending OTP. Please try again.',
+        position: 'top',
+      })
     }
   };
 
@@ -69,10 +117,9 @@ export default function LoginScreen() {
             onPress={() => handleSocialLogin('apple')}
             disabled={isLoading}
           >
-            <FontAwesome name="apple" size={30} color="#000" />
+            <FontAwesome name="apple" size={29} color="#841fcc" style={styles.socialIcon} />
             <Text style={styles.socialButtonText}>Continue with Apple</Text>
           </Pressable>
-
         </View>
 
         <View style={styles.divider}>
@@ -95,7 +142,7 @@ export default function LoginScreen() {
 
         <Pressable
           style={[styles.button, phoneNumber.length < 10 && styles.buttonDisabled]}
-          onPress={handleContinue}
+          onPress={handleLoginwithNumber}
           disabled={phoneNumber.length < 10 || isLoading}
         >
           <Text style={styles.buttonText}>Continue with Phone</Text>

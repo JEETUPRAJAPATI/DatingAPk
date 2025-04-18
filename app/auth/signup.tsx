@@ -2,16 +2,53 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
+import { API_BASE_URL } from '../apiUrl';
 
 export default function SignupScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
 
-  const handleSendOTP = () => {
-    if (phoneNumber.length >= 10) {
-      router.push({
-        pathname: '/auth/verify',
-        params: { mode: 'signup' }
+  const handleSignup = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mobile: phoneNumber }),
       });
+
+      const data = await res.json();
+
+      console.log('Login rsponse:', data);
+      if (data.status) {
+        Toast.show({
+          type: 'success',
+          text1: 'OTP Sent',
+          text2: 'Please check your phone for the OTP.',
+          position: 'top',
+        })
+        router.push({
+          pathname: '/auth/verify',
+          params: { mode: 'signup', mobile: phoneNumber }
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: data.errors[0].message,
+          position: 'top',
+        })
+      }
+
+    } catch (error) {
+      console.error('Login error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: 'An error occurred while sending OTP. Please try again.',
+        position: 'top',
+      })
     }
   };
 
@@ -39,7 +76,7 @@ export default function SignupScreen() {
 
         <Pressable
           style={[styles.button, phoneNumber.length < 10 && styles.buttonDisabled]}
-          onPress={handleSendOTP}
+          onPress={handleSignup}
           disabled={phoneNumber.length < 10}
         >
           <Text style={styles.buttonText}>Send OTP</Text>
