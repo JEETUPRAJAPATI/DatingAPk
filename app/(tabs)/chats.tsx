@@ -1,214 +1,142 @@
-import { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Image, Modal } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Send, Smile, Image as ImageIcon, X, Paperclip } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
-import EmojiPicker from '@/components/EmojiPicker';
+import { useState } from 'react';
+import { View, Text, StyleSheet, Image, Pressable, ScrollView, TextInput } from 'react-native';
+import { router } from 'expo-router';
+import { Search, Video, MessageSquare } from 'lucide-react-native';
 
-interface Message {
+interface User {
   id: string;
-  text: string;
-  image?: string;
-  sender: 'user' | 'other';
+  name: string;
+  image: string;
+  lastMessage: string;
   timestamp: string;
+  unread: number;
+  online: boolean;
+  typing?: boolean;
 }
 
-const initialMessages: Message[] = [
+const users: User[] = [
   {
     id: '1',
-    text: 'Hey there! How are you?',
-    sender: 'other',
-    timestamp: '10:30 AM'
+    name: 'Emma',
+    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
+    lastMessage: 'typing...',
+    timestamp: '2m ago',
+    unread: 2,
+    online: true,
+    typing: true
   },
   {
     id: '2',
-    text: 'I AM doing great! How about you?',
-    sender: 'user',
-    timestamp: '10:31 AM'
+    name: 'Sarah',
+    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
+    lastMessage: 'That sounds amazing! 😊',
+    timestamp: '1h ago',
+    unread: 0,
+    online: true
   },
   {
     id: '3',
-    text: 'Would love to grab coffee sometime! ☕️',
-    sender: 'other',
-    timestamp: '10:32 AM'
+    name: 'Jessica',
+    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop',
+    lastMessage: 'Looking forward to our d...',
+    timestamp: '2h ago',
+    unread: 1,
+    online: false
   }
 ];
 
-export default function ChatScreen() {
-  const { id } = useLocalSearchParams();
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [message, setMessage] = useState('');
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showAttachments, setShowAttachments] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+export default function ChatsScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSend = () => {
-    if (message.trim()) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: message,
-        sender: 'user',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages([...messages, newMessage]);
-      setMessage('');
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }
-  };
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const handleEmojiSelect = (emoji: string) => {
-    setMessage(prev => prev + emoji);
-    setShowEmojiPicker(false);
-  };
-
-  const handleAttachment = async (type: 'camera' | 'gallery' | 'document') => {
-    setShowAttachments(false);
-
-    if (type === 'gallery') {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          text: '',
-          image: result.assets[0].uri,
-          sender: 'user',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages([...messages, newMessage]);
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }
-    }
+  const handleUserPress = (userId: string) => {
+    router.push({
+      pathname: '/chat/[id]',
+      params: { id: userId }
+    });
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#FF00FF" />
-        </Pressable>
-        <Image
-          source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop' }}
-          style={styles.avatar}
-        />
-        <View style={styles.headerInfo}>
-          <Text style={styles.name}>Sarah Parker</Text>
-          <Text style={styles.status}>Online</Text>
-        </View>
+        <Text style={styles.title}>Messages</Text>
+        <Text style={styles.subtitle}>Your conversations</Text>
       </View>
 
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.messagesContainer}
-        contentContainerStyle={styles.messagesContent}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-      >
-        {messages.map((msg) => (
-          <View
-            key={msg.id}
-            style={[
-              styles.messageWrapper,
-              msg.sender === 'user' ? styles.userMessage : styles.otherMessage
-            ]}
-          >
-            {msg.image ? (
-              <Image source={{ uri: msg.image }} style={styles.messageImage} />
-            ) : (
-              <Text style={styles.messageText}>{msg.text}</Text>
-            )}
-            <Text style={styles.timestamp}>{msg.timestamp}</Text>
+      <ScrollView horizontal style={styles.storiesContainer} showsHorizontalScrollIndicator={false}>
+        <View style={styles.addStoryButton}>
+          <Text style={styles.addStoryPlus}>+</Text>
+          <Text style={styles.addStoryText}>Add Story</Text>
+        </View>
+        {users.map(user => (
+          <View key={user.id} style={styles.storyItem}>
+            <Image source={{ uri: user.image }} style={styles.storyImage} />
           </View>
         ))}
       </ScrollView>
 
-      <View style={styles.inputContainer}>
-        <Pressable
-          style={styles.attachButton}
-          onPress={() => setShowAttachments(true)}
-        >
-          <Paperclip size={24} color="#FF00FF" />
-        </Pressable>
-
+      <View style={styles.searchContainer}>
+        <Search size={20} color="#FF00FF" />
         <TextInput
-          style={styles.input}
-          value={message}
-          onChangeText={setMessage}
-          placeholder="Type a message..."
+          style={styles.searchInput}
+          placeholder="Search messages..."
           placeholderTextColor="#666"
-          multiline
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
-
-        <Pressable
-          style={styles.emojiButton}
-          onPress={() => setShowEmojiPicker(true)}
-        >
-          <Smile size={24} color="#FF00FF" />
-        </Pressable>
-
-        <Pressable
-          style={[styles.sendButton, !message && styles.sendButtonDisabled]}
-          onPress={handleSend}
-          disabled={!message}
-        >
-          <Send size={24} color={message ? '#000' : '#666'} />
-        </Pressable>
       </View>
 
-      <Modal
-        visible={showEmojiPicker}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowEmojiPicker(false)}
-      >
-        <EmojiPicker onSelect={handleEmojiSelect} onClose={() => setShowEmojiPicker(false)} />
-      </Modal>
+      <ScrollView style={styles.userList}>
+        {filteredUsers.map(user => (
+          <Pressable
+            key={user.id}
+            style={styles.userItem}
+            onPress={() => handleUserPress(user.id)}
+          >
+            <View style={styles.avatarContainer}>
+              <Image source={{ uri: user.image }} style={styles.avatar} />
+              {user.online && <View style={styles.onlineIndicator} />}
+            </View>
 
-      <Modal
-        visible={showAttachments}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowAttachments(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowAttachments(false)}
-        >
-          <View style={styles.attachmentsMenu}>
-            <Text style={styles.attachmentsTitle}>Share Content</Text>
+            <View style={styles.userInfo}>
+              <View style={styles.nameRow}>
+                <Text style={styles.userName}>{user.name}</Text>
+                <Text style={styles.timestamp}>{user.timestamp}</Text>
+              </View>
 
-            <Pressable
-              style={styles.attachmentOption}
-              onPress={() => handleAttachment('camera')}
-            >
-              <Text style={styles.attachmentText}>Camera</Text>
-            </Pressable>
+              <View style={styles.messageRow}>
+                <Text
+                  style={[
+                    styles.lastMessage,
+                    user.typing && styles.typingMessage,
+                    user.unread > 0 && styles.unreadMessage
+                  ]}
+                  numberOfLines={1}
+                >
+                  {user.lastMessage}
+                </Text>
+                {user.unread > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadCount}>{user.unread}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
 
-            <Pressable
-              style={styles.attachmentOption}
-              onPress={() => handleAttachment('gallery')}
-            >
-              <Text style={styles.attachmentText}>Photo & Video Library</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.attachmentOption}
-              onPress={() => handleAttachment('document')}
-            >
-              <Text style={styles.attachmentText}>Document</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.cancelButton}
-              onPress={() => setShowAttachments(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Modal>
+            <View style={styles.actionButtons}>
+              <Pressable style={styles.actionButton}>
+                <Video size={20} color="#FF00FF" />
+              </Pressable>
+              <Pressable style={styles.actionButton}>
+                <MessageSquare size={20} color="#FF00FF" />
+              </Pressable>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -219,159 +147,178 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
     paddingTop: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 0, 255, 0.2)',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  backButton: {
-    marginRight: 16,
+  title: {
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 32,
+    color: '#FF00FF',
+    textShadowColor: '#FF00FF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  subtitle: {
+    fontFamily: 'Rajdhani',
+    fontSize: 18,
+    color: '#00FFFF',
+    marginTop: 4,
+  },
+  storiesContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  addStoryButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
-  headerInfo: {
-    flex: 1,
+  addStoryPlus: {
+    fontFamily: 'Rajdhani-Bold',
+    fontSize: 24,
+    color: '#FF00FF',
   },
-  name: {
-    fontFamily: 'Orbitron-Bold',
-    fontSize: 18,
-    color: '#FFFFFF',
-  },
-  status: {
-    fontFamily: 'Rajdhani',
-    fontSize: 14,
-    color: '#39FF14',
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    padding: 20,
-  },
-  messageWrapper: {
-    maxWidth: '80%',
-    marginBottom: 16,
-    borderRadius: 16,
-    padding: 12,
-  },
-  userMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#FF00FF',
-  },
-  otherMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 0, 255, 0.2)',
-  },
-  messageText: {
-    fontFamily: 'Rajdhani',
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  messageImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 8,
-  },
-  timestamp: {
+  addStoryText: {
     fontFamily: 'Rajdhani',
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: '#FF00FF',
     marginTop: 4,
-    alignSelf: 'flex-end',
   },
-  inputContainer: {
+  storyItem: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+    overflow: 'hidden',
+  },
+  storyImage: {
+    width: '100%',
+    height: '100%',
+  },
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    paddingBottom: 34,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 0, 255, 0.2)',
-    gap: 12,
-  },
-  attachButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     backgroundColor: 'rgba(255, 0, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
+    marginHorizontal: 20,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    color: '#FFF',
-    fontFamily: 'Rajdhani',
-    fontSize: 16,
-  },
-  emojiButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FF00FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendButtonDisabled: {
-    backgroundColor: 'rgba(255, 0, 255, 0.2)',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  attachmentsMenu: {
-    backgroundColor: '#1A1A1A',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: '#FF00FF',
   },
-  attachmentsTitle: {
-    fontFamily: 'Orbitron-Bold',
-    fontSize: 20,
-    color: '#FF00FF',
-    marginBottom: 16,
-    textAlign: 'center',
+  searchInput: {
+    flex: 1,
+    height: 40,
+    marginLeft: 8,
+    color: '#FFFFFF',
+    fontFamily: 'Rajdhani',
   },
-  attachmentOption: {
-    paddingVertical: 16,
+  userList: {
+    flex: 1,
+  },
+  userItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 0, 255, 0.2)',
+    borderBottomColor: '#FF00FF',
   },
-  attachmentText: {
-    fontFamily: 'Rajdhani-SemiBold',
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#39FF14',
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  userInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  userName: {
+    fontFamily: 'Orbitron-Bold',
     fontSize: 18,
     color: '#FFFFFF',
-    textAlign: 'center',
   },
-  cancelButton: {
-    marginTop: 16,
-    paddingVertical: 16,
+  timestamp: {
+    fontFamily: 'Rajdhani',
+    fontSize: 14,
+    color: '#666666',
   },
-  cancelButtonText: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 18,
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  lastMessage: {
+    flex: 1,
+    fontFamily: 'Rajdhani',
+    fontSize: 16,
+    color: '#666666',
+    marginRight: 8,
+  },
+  typingMessage: {
     color: '#FF00FF',
-    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  unreadMessage: {
+    color: '#FFFFFF',
+    fontFamily: 'Rajdhani-SemiBold',
+  },
+  unreadBadge: {
+    backgroundColor: '#FF00FF',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  unreadCount: {
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 14,
+    color: '#000000',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginLeft: 12,
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FF00FF',
   },
 });

@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import DateGame from '@/components/DateGame';
 import GameResults from '@/components/GameResults';
 
+
 interface Match {
   id: string;
   name: string;
@@ -44,7 +45,7 @@ const matches: Match[] = [
     lastActive: 'Just now',
     status: 'online',
   },
-   {
+  {
     id: '4',
     name: 'Faran',
     age: 26,
@@ -53,7 +54,7 @@ const matches: Match[] = [
     lastActive: 'Just now',
     status: 'online',
   },
-   {
+  {
     id: '5',
     name: 'Nidhi',
     age: 26,
@@ -133,66 +134,76 @@ export default function MatchesScreen() {
 
           <ScrollView style={styles.matchesList} showsVerticalScrollIndicator={false}>
             {matches.map((match) => (
-              <View key={match.id} style={styles.matchCard}>
-                <Image source={{ uri: match.image }} style={styles.matchImage} />
-                <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.8)']}
-                  style={styles.gradient}
-                />
+              <LinearGradient
+                key={match.id}
+                colors={['#FF00FF', '#00FFFF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.matchCardGradient}
+              >
+                <View style={styles.matchCard}>
 
-                <View style={styles.matchInfo}>
-                  <View>
-                    <Text style={styles.matchName}>
-                      {match.name}, {match.age}
-                    </Text>
-                    <Text style={styles.lastActive}>
-                      {match.status === 'online' ? (
-                        <Text style={styles.onlineStatus}>● Online</Text>
-                      ) : (
-                        match.lastActive
-                      )}
-                    </Text>
+                  <Image source={{ uri: match.image }} style={styles.matchImage} />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.8)']}
+                    style={styles.gradient}
+                  />
+
+                  <View style={styles.matchInfo}>
+                    <View>
+                      <Text style={styles.matchName}>
+                        {match.name}, {match.age}
+                      </Text>
+                      <Text style={styles.lastActive}>
+                        {match.status === 'online' ? (
+                          <Text style={styles.onlineStatus}>● Online</Text>
+                        ) : (
+                          match.lastActive
+                        )}
+                      </Text>
+                    </View>
+
+                    <View style={styles.matchBadge}>
+                      <Text style={styles.matchPercentage}>{match.matchPercentage}%</Text>
+                      <Text style={styles.matchLabel}>Match</Text>
+                    </View>
                   </View>
 
-                  <View style={styles.matchBadge}>
-                    <Text style={styles.matchPercentage}>{match.matchPercentage}%</Text>
-                    <Text style={styles.matchLabel}>Match</Text>
+                  <Pressable
+                    style={styles.optionsButton}
+                    onPress={() => handleViewProfile(match)}
+                  >
+                    <MoreVertical size={24} color="#FF00FF" />
+                  </Pressable>
+
+                  <View style={styles.actionButtons}>
+                    <Pressable
+                      style={styles.actionButton}
+                      onPress={() => handleVideoCall(match)}
+                    >
+                      <Video size={24} color="#FF00FF" />
+                      <Text style={styles.actionText}>Video</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={[styles.actionButton, styles.playButton]}
+                      onPress={() => handleGameInvite(match)}
+                    >
+                      <Gamepad2 size={24} color="#00FFFF" />
+                      <Text style={styles.actionText}>Play</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={styles.actionButton}
+                      onPress={() => handleChat(match)}
+                    >
+                      <MessageCircle size={24} color="#39FF14" />
+                      <Text style={styles.actionText}>Chat</Text>
+                    </Pressable>
                   </View>
                 </View>
+              </LinearGradient>
 
-                <Pressable
-                  style={styles.optionsButton}
-                  onPress={() => handleViewProfile(match)}
-                >
-                  <MoreVertical size={24} color="#FF00FF" />
-                </Pressable>
-
-                <View style={styles.actionButtons}>
-                  <Pressable
-                    style={styles.actionButton}
-                    onPress={() => handleVideoCall(match)}
-                  >
-                    <Video size={24} color="#FF00FF" />
-                    <Text style={styles.actionText}>Video</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.actionButton, styles.playButton]}
-                    onPress={() => handleGameInvite(match)}
-                  >
-                    <Gamepad2 size={24} color="#00FFFF" />
-                    <Text style={styles.actionText}>Play</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={styles.actionButton}
-                    onPress={() => handleChat(match)}
-                  >
-                    <MessageCircle size={24} color="#39FF14" />
-                    <Text style={styles.actionText}>Chat</Text>
-                  </Pressable>
-                </View>
-              </View>
             ))}
           </ScrollView>
         </>
@@ -219,6 +230,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+    // backgroundColor: 'red',
   },
   header: {
     paddingTop: 60,
@@ -243,13 +255,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  matchCardGradient: {
+    borderRadius: 22, // slightly bigger than inner
+    padding: 2,       // thickness of the gradient border
+    marginBottom: 20,
+  },
   matchCard: {
     height: 400,
     borderRadius: 20,
-    marginBottom: 20,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#FF00FF',
     backgroundColor: '#1A1A1A',
   },
   matchImage: {
@@ -292,22 +306,22 @@ const styles = StyleSheet.create({
     color: '#39FF14',
   },
   matchBadge: {
-    backgroundColor: 'rgba(255, 0, 255, 0.2)',
     borderRadius: 12,
     padding: 8,
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: '#FF00FF',
+    textShadowColor: '#FF00FF',
   },
   matchPercentage: {
     fontFamily: 'Orbitron-Bold',
     fontSize: 20,
-    color: '#FF00FF',
+    color: '#1dde8d',
   },
   matchLabel: {
-    fontFamily: 'Rajdhani',
+    fontFamily: 'Orbitron-Bold',
     fontSize: 14,
-    color: '#FF00FF',
+    color: '#1dde8d'
   },
   actionButtons: {
     position: 'absolute',

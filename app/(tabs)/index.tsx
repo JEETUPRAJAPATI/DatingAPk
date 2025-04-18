@@ -60,7 +60,7 @@ const profiles: Profile[] = [
     image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
     location: 'Miami, FL',
   },
-   {
+  {
     id: '4',
     name: 'Nidhi',
     age: 24,
@@ -68,7 +68,7 @@ const profiles: Profile[] = [
     image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
     location: 'Miami, FL',
   },
-   {
+  {
     id: '5',
     name: 'Yashwant Gupta',
     age: 24,
@@ -384,12 +384,17 @@ export default function ExploreScreen() {
                   <Text style={styles.resetButtonText}>Reset</Text>
                 </Pressable>
 
-                <Pressable
-                  style={styles.applyButton}
-                  onPress={handleApplyFilters}
-                >
-                  <Text style={styles.applyButtonText}>Apply Filter</Text>
+                <Pressable onPress={handleApplyFilters} style={styles.pressableWrapper}>
+                  <LinearGradient
+                    colors={['#FF00FF', '#D000FF', '#8000FF']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.applyButton}
+                  >
+                    <Text style={styles.applyButtonText}>Apply Filter</Text>
+                  </LinearGradient>
                 </Pressable>
+
               </View>
             </ScrollView>
           </Pressable>
@@ -670,18 +675,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FF00FF',
   },
+  pressableWrapper: {
+    flex: 1, // or use width: '100%' if you don't want it to expand unnecessarily
+  },
+
   applyButton: {
-    flex: 1,
-    backgroundColor: '#FF00FF',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%', // make sure gradient fills the wrapper
   },
+
   applyButtonText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 16,
     color: '#000000',
   },
+
   optionsButton: {
     position: 'absolute',
     top: 20,

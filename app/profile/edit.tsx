@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, Image, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, Camera, MapPin, Plus, ChevronRight } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function EditProfileScreen() {
   const [profile, setProfile] = useState({
@@ -151,10 +152,18 @@ export default function EditProfileScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable style={styles.updateButton} onPress={handleUpdateProfile}>
-          <Text style={styles.updateButtonText}>Update</Text>
+        <Pressable onPress={handleUpdateProfile} style={styles.updateWrapper}>
+          <LinearGradient
+            colors={['#FF00FF', '#D000FF', '#8000FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.updateButton}
+          >
+            <Text style={styles.updateButtonText}>Update</Text>
+          </LinearGradient>
         </Pressable>
       </View>
+
     </View>
   );
 }
@@ -318,9 +327,13 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
+
+  updateWrapper: {
+    width: '100%', // Keeps the button full-width within the footer
+  },
+
   updateButton: {
     height: 56,
-    backgroundColor: '#FF00FF',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -329,10 +342,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 10,
     elevation: 5,
+    width: '100%', // Ensures the gradient fills the wrapper
   },
+
   updateButtonText: {
     fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 18,
+    fontSize: 24,
     color: '#000',
   },
+
 });

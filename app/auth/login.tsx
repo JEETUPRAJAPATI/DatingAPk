@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, Image, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 type SocialProvider = 'google' | 'facebook' | 'apple';
 
@@ -50,10 +51,7 @@ export default function LoginScreen() {
             onPress={() => handleSocialLogin('google')}
             disabled={isLoading}
           >
-            <Image
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }}
-              style={styles.socialIcon}
-            />
+            <FontAwesome name="google" size={24} color="#DB4437" style={styles.socialIcon} />
             <Text style={styles.socialButtonText}>Continue with Google</Text>
           </Pressable>
 
@@ -62,28 +60,19 @@ export default function LoginScreen() {
             onPress={() => handleSocialLogin('facebook')}
             disabled={isLoading}
           >
-            <Image
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg' }}
-              style={styles.socialIcon}
-            />
+            <FontAwesome name="facebook" size={24} color="#3b5998" style={styles.socialIcon} />
             <Text style={styles.socialButtonText}>Continue with Facebook</Text>
           </Pressable>
 
-          {Platform.OS === 'ios' && (
-            <Pressable
-              style={[styles.socialButton, styles.appleButton]}
-              onPress={() => handleSocialLogin('apple')}
-              disabled={isLoading}
-            >
-              <Image
-                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' }}
-                style={[styles.socialIcon, styles.appleIcon]}
-              />
-              <Text style={[styles.socialButtonText, styles.appleButtonText]}>
-                Continue with Apple
-              </Text>
-            </Pressable>
-          )}
+          <Pressable
+            style={styles.socialButton}
+            onPress={() => handleSocialLogin('apple')}
+            disabled={isLoading}
+          >
+            <FontAwesome name="apple" size={30} color="#000" />
+            <Text style={styles.socialButtonText}>Continue with Apple</Text>
+          </Pressable>
+
         </View>
 
         <View style={styles.divider}>
