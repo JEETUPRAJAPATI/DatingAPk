@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, ScrollView, Pressable } from 'react-nati
 import { Settings, CreditCard as Edit3, Crown, ChevronRight, Camera } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { useUserProfile } from '../context/userContext';
 
 interface Plan {
   id: string;
@@ -45,25 +46,27 @@ const plans: Plan[] = [
 
 export default function ProfileScreen() {
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const { user, token } = useUserProfile()
+  console.log("user profile:", user, token)
 
   const handleEditProfile = () => {
     router.push('/profile/edit');
   };
-// Update the handleUpgrade function in the ProfileScreen component
-interface Plan {
-  name: string;
-  price: number;
-}
+  // Update the handleUpgrade function in the ProfileScreen component
+  interface Plan {
+    name: string;
+    price: number;
+  }
 
-const handleUpgrade = (plan: Plan) => {
-  router.push({
-    pathname: '/payment/method',
-    params: {
-      plan: plan.name,
-      price: plan.price.toString()
-    }
-  });
-};
+  const handleUpgrade = (plan: Plan) => {
+    router.push({
+      pathname: '/payment/method',
+      params: {
+        plan: plan.name,
+        price: plan.price.toString()
+      }
+    });
+  };
   if (showUpgrade) {
     return (
       <View style={styles.container}>
@@ -111,8 +114,8 @@ const handleUpgrade = (plan: Plan) => {
               </View>
 
               <Pressable style={styles.upgradeButton}
-              onPress={() => handleUpgrade({ name: 'Premium', price: 9.99 })}
-             >
+                onPress={() => handleUpgrade({ name: 'Premium', price: 9.99 })}
+              >
                 <Text style={styles.upgradeButtonText}>
                   Choose {plan.name}
                 </Text>

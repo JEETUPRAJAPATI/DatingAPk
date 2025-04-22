@@ -1,35 +1,155 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, Image, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, Camera, MapPin, Plus, ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { API_BASE_URL } from '../apiUrl';
+import { useUserProfile } from '../context/userContext';
+import Toast from 'react-native-toast-message';
+const GradientInput = ({ children }: { children: React.ReactNode }) => (
+  <LinearGradient
+    colors={['#FF00FF', '#8000FF']}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={styles.gradientBorder}
+  >
+    {children}
+  </LinearGradient>
+);
 
 export default function EditProfileScreen() {
+  const { token } = useUserProfile()
+
   const [profile, setProfile] = useState({
     name: 'Sample User',
     email: 'sampleuser@gmail.com',
     phone: '+91 9512345678',
     gender: 'Female',
+    genderPreference: 'Female',
     age: '25',
-    about: 'Here are many variations of passages\nLorem ipsum text of the printing.',
-    interests: 'Shopping, Books, Music, Singing...',
+    birthdate: '1998-04-12',
+    height: 170,
+    weight: 65,
+    skin_color: 'Fair',
+    address: '123 Main St, New York, NY',
+    category: 'Friendship',
+    about: 'Adventurer and dreamer',
+    likes: ['Movies', 'Travel'],
+    interests: ['Photography', 'Cooking'],
+    hobbies: ['Reading', 'Dancing'],
     location: 'South Mumbai',
   });
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        console.log('👤 Profile fetched:', data);
+
+        if (res.ok && data.status && data.fullname) {
+          setProfile({
+            name: data.user.fullname || '',
+            email: data.user.email || '',
+            phone: data.user.phone || '',
+            gender: data.user.gender || '',
+            genderPreference: data.user.genderPreference || '',
+            age: data.user.age?.toString() || '',
+            birthdate: data.user.birthdate || '',
+            height: data.user.height || 0,
+            weight: data.user.weight || 0,
+            skin_color: data.user.skin_color || '',
+            address: data.user.address || '',
+            category: data.user.category || '',
+            about: data.user.about || '',
+            likes: data.user.likes || [],
+            interests: data.user.interests || [],
+            hobbies: data.user.hobbies || [],
+            location: data.user.location || '',
+          });
+        }
+      } catch (error) {
+        console.error('Profile fetch error:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Network Error',
+          text2: 'Please try again later.',
+          position: 'top',
+        });
+      }
+    };
+
+    if (token) {
+      fetchProfile();
+    }
+  }, [token]);
+
   const handleUpdateProfile = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      router.back();
+      const response = await fetch(`${API_BASE_URL}/user/profile/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Make sure `token` is available in your scope
+        },
+        body: JSON.stringify({
+          fullname: profile.name,
+          about: profile.about,
+          email: profile.email,
+          birthdate: profile.birthdate,
+          genderPreference: profile.genderPreference,
+          height: profile.height,
+          weight: profile.weight,
+          skin_color: profile.skin_color,
+          address: profile.address,
+          category: profile.category,
+          likes: profile.likes,
+          interests: profile.interests,
+          hobbies: profile.hobbies,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('🚀 API Response:', data);
+
+      if (response.ok && data.status) {
+        Toast.show({
+          type: 'success',
+          text1: 'Profile Updated',
+          text2: 'Your profile has been updated successfully!',
+          position: 'top',
+        });
+
+        router.back();
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Update Failed',
+          text2: data.message || 'Something went wrong.',
+          position: 'top',
+        });
+      }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Update error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Network Error',
+        text2: 'Please try again later.',
+        position: 'top',
+      });
     }
   };
+
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => router.push('/profile')} style={styles.backButton}>
           <ArrowLeft size={24} color="#FF00FF" />
         </Pressable>
         <Text style={styles.title}>Edit Profile</Text>
@@ -48,107 +168,205 @@ export default function EditProfileScreen() {
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Your Name</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.name}
-              onChangeText={(text) => setProfile({ ...profile, name: text })}
-              placeholderTextColor="#666"
-            />
+            <Text style={styles.label}>Full Name</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.name}
+                onChangeText={(text) => setProfile({ ...profile, name: text })}
+                placeholder="John Doe"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.email}
-              onChangeText={(text) => setProfile({ ...profile, email: text })}
-              keyboardType="email-address"
-              placeholderTextColor="#666"
-            />
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.email}
+                onChangeText={(text) => setProfile({ ...profile, email: text })}
+                keyboardType="email-address"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.phone}
-              onChangeText={(text) => setProfile({ ...profile, phone: text })}
-              keyboardType="phone-pad"
-              placeholderTextColor="#666"
-            />
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.phone}
+                onChangeText={(text) => setProfile({ ...profile, phone: text })}
+                keyboardType="phone-pad"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Birthdate</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.birthdate}
+                onChangeText={(text) => setProfile({ ...profile, birthdate: text })}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
           </View>
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1 }]}>
               <Text style={styles.label}>Gender</Text>
-              <Pressable style={styles.selectInput}>
-                <Text style={styles.selectText}>{profile.gender}</Text>
-                <ChevronRight size={20} color="#FF00FF" />
-              </Pressable>
+              <GradientInput>
+                <TextInput
+                  style={styles.inputInner}
+                  value={profile.gender}
+                  onChangeText={(text) => setProfile({ ...profile, gender: text })}
+                  placeholderTextColor="#666"
+                />
+              </GradientInput>
             </View>
-
             <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
-              <Text style={styles.label}>Age</Text>
-              <Pressable style={styles.selectInput}>
-                <Text style={styles.selectText}>{profile.age}</Text>
-                <ChevronRight size={20} color="#FF00FF" />
-              </Pressable>
+              <Text style={styles.label}>Gender Preference</Text>
+              <GradientInput>
+                <TextInput
+                  style={styles.inputInner}
+                  value={profile.genderPreference}
+                  onChangeText={(text) => setProfile({ ...profile, genderPreference: text })}
+                  placeholderTextColor="#666"
+                />
+              </GradientInput>
             </View>
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>Height (cm)</Text>
+              <GradientInput>
+                <TextInput
+                  style={styles.inputInner}
+                  value={String(profile.height)}
+                  onChangeText={(text) => setProfile({ ...profile, height: Number(text) })}
+                  keyboardType="numeric"
+                  placeholderTextColor="#666"
+                />
+              </GradientInput>
+            </View>
+            <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
+              <Text style={styles.label}>Weight (kg)</Text>
+              <GradientInput>
+                <TextInput
+                  style={styles.inputInner}
+                  value={String(profile.weight)}
+                  onChangeText={(text) => setProfile({ ...profile, weight: Number(text) })}
+                  keyboardType="numeric"
+                  placeholderTextColor="#666"
+                />
+              </GradientInput>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Skin Color</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.skin_color}
+                onChangeText={(text) => setProfile({ ...profile, skin_color: text })}
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Address</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.address}
+                onChangeText={(text) => setProfile({ ...profile, address: text })}
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Category (e.g., Friendship)</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.category}
+                onChangeText={(text) => setProfile({ ...profile, category: text })}
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>About</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={profile.about}
-              onChangeText={(text) => setProfile({ ...profile, about: text })}
-              multiline
-              numberOfLines={4}
-              placeholderTextColor="#666"
-            />
+            <GradientInput>
+              <TextInput
+                style={[styles.inputInner, styles.textArea]}
+                value={profile.about}
+                onChangeText={(text) => setProfile({ ...profile, about: text })}
+                multiline
+                numberOfLines={4}
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Interest</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.interests}
-              onChangeText={(text) => setProfile({ ...profile, interests: text })}
-              placeholderTextColor="#666"
-            />
+            <Text style={styles.label}>Likes (comma-separated)</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.likes?.join(', ')}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, likes: text.split(',').map(item => item.trim()) })
+                }
+                placeholder="Movies, Travel"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Location</Text>
-            <Pressable style={styles.locationInput}>
-              <MapPin size={20} color="#FF00FF" />
-              <Text style={styles.locationText}>{profile.location}</Text>
-            </Pressable>
+            <Text style={styles.label}>Interests</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.interests?.join(', ')}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, interests: text.split(',').map(item => item.trim()) })
+                }
+                placeholder="Photography, Cooking"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
           </View>
 
-          <Text style={styles.sectionTitle}>My Interest</Text>
-          <Pressable style={styles.interestButton}>
-            <ChevronRight size={20} color="#FF00FF" />
-          </Pressable>
-
-          <Text style={styles.sectionTitle}>Looking For</Text>
-          <Pressable style={styles.interestButton}>
-            <ChevronRight size={20} color="#FF00FF" />
-          </Pressable>
-
-          <View style={styles.photoGrid}>
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop' }}
-              style={styles.photoItem}
-            />
-            {[...Array(5)].map((_, index) => (
-              <Pressable key={index} style={styles.addPhotoButton}>
-                <Plus size={32} color="#FF00FF" />
-              </Pressable>
-            ))}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Hobbies</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.hobbies?.join(', ')}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, hobbies: text.split(',').map(item => item.trim()) })
+                }
+                placeholder="Reading, Dancing"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
           </View>
         </View>
+
       </ScrollView>
 
       <View style={styles.footer}>
@@ -225,7 +443,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 6,
   },
   label: {
     fontFamily: 'Rajdhani-SemiBold',
@@ -349,6 +567,26 @@ const styles = StyleSheet.create({
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 24,
     color: '#000',
+  },
+  gradientBorder: {
+    padding: 2, // border thickness
+    borderRadius: 24,
+    marginBottom: 16,
+  },
+  inputInner: {
+    height: 48,
+    backgroundColor: '#000',
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    color: '#FFF',
+    fontFamily: 'Rajdhani',
+    justifyContent: 'center',
+  },
+
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+    paddingTop: 12,
   },
 
 });

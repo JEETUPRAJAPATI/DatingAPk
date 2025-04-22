@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Heart, Sparkles } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface GameResultsProps {
   matchName: string;
@@ -12,12 +13,12 @@ interface GameResultsProps {
   onNextStage: () => void;
 }
 
-export default function GameResults({ 
-  matchName, 
-  stage, 
-  results, 
-  onClose, 
-  onNextStage 
+export default function GameResults({
+  matchName,
+  stage,
+  results,
+  onClose,
+  onNextStage
 }: GameResultsProps) {
   const compatibility = Math.round((results.shared / results.answers.length) * 100);
 
@@ -25,7 +26,7 @@ export default function GameResults({
     <View style={styles.container}>
       <View style={styles.content}>
         <Heart size={64} color="#FF00FF" strokeWidth={1.5} />
-        
+
         <Text style={styles.title}>Stage Complete!</Text>
         <Text style={styles.subtitle}>
           You and {matchName} completed the {stage} stage
@@ -56,9 +57,34 @@ export default function GameResults({
         </View>
 
         <View style={styles.buttonContainer}>
-          <Pressable style={styles.nextButton} onPress={onNextStage}>
-            <Text style={styles.nextButtonText}>Next Stage</Text>
+          <Pressable onPress={onNextStage} style={{ width: '100%' }}>
+            <LinearGradient
+              colors={['#FF00FF', '#D000FF', '#8000FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                height: 48,
+                borderRadius: 24,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#FF00FF',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.5,
+                shadowRadius: 10,
+                elevation: 5,
+                width: '100%',
+              }}
+            >
+              <Text style={{
+                fontFamily: 'Rajdhani-SemiBold',
+                fontSize: 18,
+                color: '#000000',
+              }}>
+                Next Stage
+              </Text>
+            </LinearGradient>
           </Pressable>
+
 
           <Pressable style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>End Game</Text>

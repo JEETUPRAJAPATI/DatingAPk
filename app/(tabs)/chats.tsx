@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable, ScrollView, TextInput } from 'react-native';
 import { router } from 'expo-router';
-import { Search, Video, MessageSquare } from 'lucide-react-native';
+import { Search, Video, MessageSquare, Plus } from 'lucide-react-native';
+import StoryViewer from '@/components/StoryViewer';
+import StoryUploader from '@/components/StoryUploader';
 
 interface User {
   id: string;
@@ -12,6 +14,11 @@ interface User {
   unread: number;
   online: boolean;
   typing?: boolean;
+  stories?: Array<{
+    id: string;
+    imageUrl: string;
+    timestamp: string;
+  }>;
 }
 
 const users: User[] = [
@@ -23,7 +30,19 @@ const users: User[] = [
     timestamp: '2m ago',
     unread: 2,
     online: true,
-    typing: true
+    typing: true,
+    stories: [
+      {
+        id: '1',
+        imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
+        timestamp: '2h ago'
+      },
+      {
+        id: '2',
+        imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
+        timestamp: '1h ago'
+      }
+    ]
   },
   {
     id: '2',
@@ -32,7 +51,14 @@ const users: User[] = [
     lastMessage: 'That sounds amazing! 😊',
     timestamp: '1h ago',
     unread: 0,
-    online: true
+    online: true,
+    stories: [
+      {
+        id: '1',
+        imageUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
+        timestamp: '30m ago'
+      }
+    ]
   },
   {
     id: '3',
@@ -47,6 +73,10 @@ const users: User[] = [
 
 export default function ChatsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStories, setSelectedStories] = useState<User['stories']>([]);
+  const [storyViewerVisible, setStoryViewerVisible] = useState(false);
+  const [storyUploaderVisible, setStoryUploaderVisible] = useState(false);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -59,6 +89,19 @@ export default function ChatsScreen() {
     });
   };
 
+  const handleStoryPress = (user: User) => {
+    if (user.stories && user.stories.length > 0) {
+      setSelectedStories(user.stories);
+      setCurrentStoryIndex(0);
+      setStoryViewerVisible(true);
+    }
+  };
+
+  const handleStoryUpload = (imageUri: string) => {
+    // Here you would typically upload the image to your backend
+    console.log('Uploading story:', imageUri);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -68,18 +111,28 @@ export default function ChatsScreen() {
 
       <View style={styles.storiesWrapper}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesContainer}>
-          <View style={styles.addStoryButton}>
+          <Pressable
+            style={styles.addStoryButton}
+            onPress={() => setStoryUploaderVisible(true)}
+          >
             <Text style={styles.addStoryPlus}>+</Text>
             <Text style={styles.addStoryText}>Add Story</Text>
-          </View>
+          </Pressable>
+
           {users.map(user => (
-            <View key={user.id} style={styles.storyItem}>
+            <Pressable
+              key={user.id}
+              style={styles.storyItem}
+              onPress={() => handleStoryPress(user)}
+            >
               <Image source={{ uri: user.image }} style={styles.storyImage} />
-            </View>
+              {user.stories && user.stories.length > 0 && (
+                <View style={styles.storyIndicator} />
+              )}
+            </Pressable>
           ))}
         </ScrollView>
       </View>
-
 
       <View style={styles.searchContainer}>
         <Search size={20} color="#FF00FF" />
@@ -140,6 +193,21 @@ export default function ChatsScreen() {
           </Pressable>
         ))}
       </ScrollView>
+
+      {selectedStories && (
+        <StoryViewer
+          visible={storyViewerVisible}
+          onClose={() => setStoryViewerVisible(false)}
+          stories={selectedStories}
+          currentIndex={currentStoryIndex}
+        />
+      )}
+
+      <StoryUploader
+        visible={storyUploaderVisible}
+        onClose={() => setStoryUploaderVisible(false)}
+        onUpload={handleStoryUpload}
+      />
     </View>
   );
 }
@@ -176,7 +244,6 @@ const styles = StyleSheet.create({
   storiesContainer: {
     alignItems: 'center',
   },
-
   addStoryButton: {
     width: 70,
     height: 70,
@@ -211,6 +278,16 @@ const styles = StyleSheet.create({
   storyImage: {
     width: '100%',
     height: '100%',
+  },
+  storyIndicator: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderRadius: 37,
+    borderWidth: 2,
+    borderColor: '#FF00FF',
   },
   searchContainer: {
     flexDirection: 'row',

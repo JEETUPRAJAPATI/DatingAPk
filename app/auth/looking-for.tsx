@@ -2,11 +2,15 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
+import { useUserProfile } from '../context/userContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type Preference = 'man' | 'woman' | 'other';
 
 export default function LookingForScreen() {
   const [selectedPreferences, setSelectedPreferences] = useState<Set<Preference>>(new Set());
+  const { updateProfile } = useUserProfile();
+
 
   const togglePreference = (preference: Preference) => {
     const newPreferences = new Set(selectedPreferences);
@@ -20,6 +24,8 @@ export default function LookingForScreen() {
 
   const handleContinue = () => {
     if (selectedPreferences.size > 0) {
+      const preferencesArray = Array.from(selectedPreferences);
+      updateProfile({ interested_in: preferencesArray }); // 👈 Update context
       router.push('/auth/profile');
     }
   };
@@ -57,12 +63,40 @@ export default function LookingForScreen() {
         </View>
 
         <Pressable
-          style={[styles.button, selectedPreferences.size === 0 && styles.buttonDisabled]}
           onPress={handleContinue}
           disabled={selectedPreferences.size === 0}
+          style={{
+            width: '100%',
+            opacity: selectedPreferences.size === 0 ? 0.5 : 1,
+          }}
         >
-          <Text style={styles.buttonText}>Continue</Text>
+          <LinearGradient
+            colors={['#FF00FF', '#D000FF', '#8000FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              height: 48,
+              borderRadius: 24,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#FF00FF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 10,
+              elevation: 5,
+              width: '100%',
+            }}
+          >
+            <Text style={{
+              fontFamily: 'Rajdhani-SemiBold',
+              fontSize: 18,
+              color: '#000000',
+            }}>
+              Continue
+            </Text>
+          </LinearGradient>
         </Pressable>
+
       </View>
     </View>
   );

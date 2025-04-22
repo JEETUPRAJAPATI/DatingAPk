@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { API_BASE_URL } from '../apiUrl';
 import Toast from 'react-native-toast-message';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type SocialProvider = 'google' | 'facebook' | 'apple';
 
@@ -141,11 +142,38 @@ export default function LoginScreen() {
         </View>
 
         <Pressable
-          style={[styles.button, phoneNumber.length < 10 && styles.buttonDisabled]}
           onPress={handleLoginwithNumber}
           disabled={phoneNumber.length < 10 || isLoading}
+          style={{
+            width: '100%',
+            opacity: phoneNumber.length < 10 || isLoading ? 0.5 : 1,
+          }}
         >
-          <Text style={styles.buttonText}>Continue with Phone</Text>
+          <LinearGradient
+            colors={['#FF00FF', '#D000FF', '#8000FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              height: 48,
+              borderRadius: 24,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#FF00FF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 10,
+              elevation: 5,
+              width: '100%',
+            }}
+          >
+            <Text style={{
+              fontFamily: 'Rajdhani-SemiBold',
+              fontSize: 18,
+              color: '#000000',
+            }}>
+              Continue with Phone
+            </Text>
+          </LinearGradient>
         </Pressable>
 
         <View style={styles.footer}>

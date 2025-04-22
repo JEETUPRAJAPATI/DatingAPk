@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, StyleSheet, Animated, Dimensions, Image } from 'react-native';
 import { Heart, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -156,20 +156,13 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
             },
           ]}
         >
-          <Heart size={80} color="#FF00FF" strokeWidth={1.5} />
+          <Image
+            source={require('../assets/images/logobg.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </Animated.View>
 
-        <Animated.Text
-          style={[
-            styles.appName,
-            {
-              transform: [{ translateX: textPosition }],
-              opacity: logoOpacity,
-            },
-          ]}
-        >
-          NeonLove
-        </Animated.Text>
       </View>
     </View>
   );
@@ -182,6 +175,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  logoImage: {
+    width: 150,
+    height: 150,
+  },
+
   gradient: {
     ...StyleSheet.absoluteFillObject,
   },

@@ -6,6 +6,7 @@ import { useFonts, Orbitron_400Regular, Orbitron_700Bold } from '@expo-google-fo
 import { Rajdhani_400Regular, Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani';
 import SplashScreen from '@/components/SplashScreen';
 import Toast from 'react-native-toast-message';
+import { UserProfileProvider } from './context/userContext';
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -33,20 +34,22 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="auth/login" />
-        <Stack.Screen name="auth/signup" />
-        <Stack.Screen name="auth/verify" />
-        <Stack.Screen name="auth/gender" />
-        <Stack.Screen name="auth/looking-for" />
-        <Stack.Screen name="auth/profile" />
-        <Stack.Screen name="auth/notifications" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="light" />
-      <Toast />
-    </>
+    <UserProfileProvider>
+      <>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="auth/login" />
+          <Stack.Screen name="auth/signup" />
+          <Stack.Screen name="auth/verify" />
+          <Stack.Screen name="auth/gender" />
+          <Stack.Screen name="auth/looking-for" />
+          <Stack.Screen name="auth/profile" />
+          <Stack.Screen name="auth/notifications" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="light" />
+        <Toast />
+      </>
+    </UserProfileProvider>
   );
 }

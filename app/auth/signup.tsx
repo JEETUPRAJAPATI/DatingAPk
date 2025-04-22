@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { API_BASE_URL } from '../apiUrl';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SignupScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -75,12 +76,40 @@ export default function SignupScreen() {
         </View>
 
         <Pressable
-          style={[styles.button, phoneNumber.length < 10 && styles.buttonDisabled]}
           onPress={handleSignup}
           disabled={phoneNumber.length < 10}
+          style={{
+            width: '100%',
+            opacity: phoneNumber.length < 10 ? 0.5 : 1,
+          }}
         >
-          <Text style={styles.buttonText}>Send OTP</Text>
+          <LinearGradient
+            colors={['#FF00FF', '#D000FF', '#8000FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              height: 48,
+              borderRadius: 24,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#FF00FF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 10,
+              elevation: 5,
+              width: '100%',
+            }}
+          >
+            <Text style={{
+              fontFamily: 'Rajdhani-SemiBold',
+              fontSize: 18,
+              color: '#000000',
+            }}>
+              Send OTP
+            </Text>
+          </LinearGradient>
         </Pressable>
+
       </View>
     </View>
   );

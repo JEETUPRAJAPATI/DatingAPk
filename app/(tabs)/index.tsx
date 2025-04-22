@@ -170,7 +170,13 @@ export default function ExploreScreen() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Explore</Text>
+        <View style={styles.container}>
+
+          <Image
+            source={require('../../assets/images/logobg.png')}  // Path to your logo image
+            style={styles.logo}
+          />
+        </View>
         <View style={styles.headerButtons}>
           <Pressable onPress={() => setShowFilter(true)} style={styles.iconButton}>
             <SlidersHorizontal size={24} color="#FF00FF" />
@@ -408,6 +414,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  logo: {
+    width: 60,  // Adjust the width of the logo
+    height: 60, // Adjust the height of the logo
+    resizeMode: 'contain',  // This ensures the logo keeps its aspect ratio
   },
   header: {
     paddingTop: 60,

@@ -130,11 +130,11 @@ export default function DateGame({ stage, onComplete, onClose }: GameProps) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.timer}>{timeLeft}s</Text>
-        <Animated.View 
+        <Animated.View
           style={[
             styles.progressBar,
             { width: progressWidth },
-          ]} 
+          ]}
         />
       </View>
 

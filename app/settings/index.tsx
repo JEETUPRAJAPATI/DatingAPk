@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, Pressable, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Modal } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { Info, FileText, Shield, Trash2, Star, LogOut } from 'lucide-react-native';
+import { Info, FileText, Shield, Trash2, Star, LogOut, ArrowLeft } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface SettingItem {
   icon: JSX.Element;
@@ -13,7 +14,7 @@ interface SettingItem {
 
 export default function SettingsScreen() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  
+
   const handleLogout = () => {
     setShowLogoutModal(false);
     router.replace('/');
@@ -55,10 +56,13 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <ArrowLeft size={24} color="#FF00FF" />
+        </Pressable>
         <Text style={styles.title}>Settings</Text>
       </View>
 
-      <ScrollView style={styles.content}>
+      <View style={styles.content}>
         {settings.map((item, index) => (
           <Pressable
             key={index}
@@ -77,7 +81,7 @@ export default function SettingsScreen() {
             </Text>
           </Pressable>
         ))}
-      </ScrollView>
+      </View>
 
       <Modal
         visible={showLogoutModal}
@@ -88,7 +92,7 @@ export default function SettingsScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Logout</Text>
             <Text style={styles.modalText}>Are you sure you want to logout?</Text>
-            
+
             <View style={styles.modalButtons}>
               <Pressable
                 style={[styles.modalButton, styles.cancelButton]}
@@ -96,13 +100,35 @@ export default function SettingsScreen() {
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </Pressable>
-              
-              <Pressable
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleLogout}
-              >
-                <Text style={styles.confirmButtonText}>Logout</Text>
+
+              <Pressable onPress={handleLogout} style={{ width: '100%' }}>
+                <LinearGradient
+                  colors={['#FF00FF', '#D000FF', '#8000FF']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    height: 48,
+                    borderRadius: 24,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: '#FF00FF',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.4,
+                    shadowRadius: 8,
+                    elevation: 4,
+                    width: '100%',
+                  }}
+                >
+                  <Text style={{
+                    fontFamily: 'Rajdhani-SemiBold',
+                    fontSize: 16,
+                    color: '#000000',
+                  }}>
+                    Logout
+                  </Text>
+                </LinearGradient>
               </Pressable>
+
             </View>
           </View>
         </View>
@@ -117,9 +143,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
+    gap: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
   title: {
     fontFamily: 'Orbitron-Bold',

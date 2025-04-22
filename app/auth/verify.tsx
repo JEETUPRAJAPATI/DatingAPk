@@ -2,12 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { API_BASE_URL } from '../apiUrl';
+import Toast from 'react-native-toast-message';
+import { UserProfileProvider, useUserProfile } from '../context/userContext';
 
 export default function VerifyScreen() {
   const { mode } = useLocalSearchParams<{ mode: 'login' | 'signup' }>();
+  const { mobile } = useLocalSearchParams<{ mobile }>();
   const [otp, setOtp] = useState(['', '', '', '']);
   const [timeLeft, setTimeLeft] = useState(60);
   const inputRefs = useRef<Array<TextInput | null>>([null, null, null, null]);
+  const { login } = useUserProfile();
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -27,12 +33,63 @@ export default function VerifyScreen() {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (otp.join('').length === 4) {
-      if (mode === 'signup') {
-        router.push('/auth/gender');
-      } else {
-        router.push('/auth/verification-success');
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            mobile,
+            otp: otp.join(''),
+          }),
+        });
+
+        const data = await response.json();
+        console.log("verify otp res:", data);
+
+        if (data.status === true) {
+
+          // Assuming you get the user data and token after OTP verification
+          const { user, token } = data.data;
+
+          // Store user and token in context and AsyncStorage
+          login({ userData: user, token });
+          if (mode === 'signup') {
+            router.push('/auth/gender');
+          } else {
+            router.push('/auth/verification-success');
+          }
+
+          // Success Toast
+          Toast.show({
+            type: 'success',
+            text1: 'OTP Verified',
+            text2: 'You have successfully verified your OTP.',
+            position: 'top',
+          });
+
+        } else {
+          // Error Toast if OTP verification fails
+          Toast.show({
+            type: 'error',
+            text1: 'OTP Verification Failed',
+            text2: 'The OTP you entered is incorrect. Please try again.',
+            position: 'top',
+          });
+        }
+      } catch (error) {
+        console.error('Error verifying OTP:', error);
+
+        // Error Toast if there's a network error
+        Toast.show({
+          type: 'error',
+          text1: 'Verification Failed',
+          text2: 'An error occurred while verifying your OTP. Please try again.',
+          position: 'top',
+        });
       }
     }
   };
@@ -83,12 +140,40 @@ export default function VerifyScreen() {
         </View>
 
         <Pressable
-          style={[styles.button, otp.join('').length < 4 && styles.buttonDisabled]}
           onPress={handleVerify}
           disabled={otp.join('').length < 4}
+          style={{
+            width: '100%',
+            opacity: otp.join('').length < 4 ? 0.5 : 1,
+          }}
         >
-          <Text style={styles.buttonText}>Verify</Text>
+          <LinearGradient
+            colors={['#FF00FF', '#D000FF', '#8000FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              height: 48,
+              borderRadius: 24,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#FF00FF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 10,
+              elevation: 5,
+              width: '100%',
+            }}
+          >
+            <Text style={{
+              fontFamily: 'Rajdhani-SemiBold',
+              fontSize: 18,
+              color: '#000000',
+            }}>
+              Verify
+            </Text>
+          </LinearGradient>
         </Pressable>
+
 
         <Pressable
           style={[styles.resendButton, timeLeft > 0 && styles.resendButtonDisabled]}
