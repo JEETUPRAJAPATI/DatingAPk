@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Pressable } from 'react-native';
 import { Settings, CreditCard as Edit3, Crown, ChevronRight, Camera } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useUserProfile } from '../context/userContext';
+import { API_BASE_URL } from '../apiUrl';
 
 interface Plan {
   id: string;
@@ -14,7 +15,7 @@ interface Plan {
   popular?: boolean;
 }
 
-const plans: Plan[] = [
+const dummyPlans: Plan[] = [
   {
     id: 'monthly',
     name: 'Premium',
@@ -44,10 +45,60 @@ const plans: Plan[] = [
   },
 ];
 
+const dummyInterests = ['Travel', 'Photography', 'Cooking', 'Yoga', 'Music'];
+
+
 export default function ProfileScreen() {
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [interests, setInterests] = useState<string[]>([])
   const { user, token } = useUserProfile()
   console.log("user profile:", user, token)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [plansRes, interestsRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/subscriptions/plans`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch(`${API_BASE_URL}/interests`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
+
+        if (!plansRes.ok || !interestsRes.ok) {
+          throw new Error('Failed to fetch data from one or both endpoints');
+        }
+
+        const plansData = await plansRes.json();
+        const interestsData = await interestsRes.json();
+
+        console.log('Plans response:', plansData);
+        console.log('Interests response:', interestsData);
+
+        if (plansData.status === true && plansData.plans?.length > 0) {
+          setPlans(plansData.plans);
+        } else {
+          setPlans(dummyPlans); // Assuming `dummyPlans` is defined elsewhere
+        }
+
+        if (interestsData.status === true && Array.isArray(interestsData.interests)) {
+          setInterests(interestsData.interests);
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    if (token) {
+      fetchData();
+    }
+  }, [token]);
 
   const handleEditProfile = () => {
     router.push('/profile/edit');
@@ -193,7 +244,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Interests</Text>
           <View style={styles.interestsContainer}>
-            {['Travel', 'Photography', 'Cooking', 'Yoga', 'Music'].map((interest, index) => (
+            {(interests.length > 0 ? interests : dummyInterests).map((interest, index) => (
               <View key={index} style={styles.interestTag}>
                 <Text style={styles.interestText}>{interest}</Text>
               </View>

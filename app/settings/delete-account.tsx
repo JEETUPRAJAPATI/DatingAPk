@@ -2,13 +2,54 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import { useUserProfile } from '../context/userContext';
+import Toast from 'react-native-toast-message';
+import { API_BASE_URL } from '../apiUrl';
 
 export default function DeleteAccountScreen() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const { token } = useUserProfile();
 
-  const handleDeleteAccount = () => {
-    setShowConfirmModal(false);
-    router.replace('/');
+  const handleDeleteAccount = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/delete-account`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      console.log('Delete response:', data);
+
+      if (res.ok && data.status === true) {
+        setShowConfirmModal(false);
+
+        Toast.show({
+          type: 'success',
+          text1: 'Account Deleted',
+          text2: 'Your account has been successfully deleted.',
+          position: 'top',
+        });
+
+        router.replace('/');
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Deletion Failed',
+          text2: data.message || 'Could not delete your account.',
+          position: 'top',
+        });
+      }
+    } catch (error) {
+      console.error('Delete account error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong. Please try again.',
+        position: 'top',
+      });
+    }
   };
 
   return (
@@ -54,7 +95,7 @@ export default function DeleteAccountScreen() {
             <Text style={styles.modalText}>
               Are you sure you want to permanently delete your account? This action cannot be undone.
             </Text>
-            
+
             <View style={styles.modalButtons}>
               <Pressable
                 style={[styles.modalButton, styles.cancelButton]}
@@ -62,7 +103,7 @@ export default function DeleteAccountScreen() {
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </Pressable>
-              
+
               <Pressable
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={handleDeleteAccount}

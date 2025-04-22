@@ -6,16 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { API_BASE_URL } from '../apiUrl';
 import { useUserProfile } from '../context/userContext';
 import Toast from 'react-native-toast-message';
-const GradientInput = ({ children }: { children: React.ReactNode }) => (
-  <LinearGradient
-    colors={['#FF00FF', '#8000FF']}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    style={styles.gradientBorder}
-  >
-    {children}
-  </LinearGradient>
-);
+import GradientInput from '@/components/GradientInput';
+
 
 export default function EditProfileScreen() {
   const { token } = useUserProfile()

@@ -1,1 +1,1 @@
-export const API_BASE_URL = "https://datingadminapi.onrender.com/api" 
+export const API_BASE_URL = "https://datingadminapi.onrender.com/api"

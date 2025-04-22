@@ -1,15 +1,57 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, Star } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
+
+import { API_BASE_URL } from '../apiUrl';
+import { useUserProfile } from '../context/userContext';
 
 export default function RateScreen() {
   const [selectedRating, setSelectedRating] = useState<number>(0);
+  const [feedback, setFeedback] = useState('');
+  const { token } = useUserProfile();
 
-  const handleSubmitRating = () => {
-    if (selectedRating > 0) {
-      // Handle rating submission
-      router.back();
+  const handleSubmitRating = async () => {
+    if (!selectedRating) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/rate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating: selectedRating, feedback }),
+      });
+
+      const data = await res.json();
+      console.log('Rate response:', data);
+
+      if (res.ok && data.status) {
+        Toast.show({
+          type: 'success',
+          text1: 'Thanks for your feedback!',
+          text2: 'Your rating has been submitted.',
+          position: 'top',
+        });
+        router.back();
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Rating Failed',
+          text2: data.message || 'Could not submit your feedback.',
+          position: 'top',
+        });
+      }
+    } catch (error) {
+      console.error('Rating error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong. Please try again.',
+        position: 'top',
+      });
     }
   };
 
@@ -29,10 +71,7 @@ export default function RateScreen() {
 
         <View style={styles.starsContainer}>
           {[1, 2, 3, 4, 5].map((rating) => (
-            <Pressable
-              key={rating}
-              onPress={() => setSelectedRating(rating)}
-            >
+            <Pressable key={rating} onPress={() => setSelectedRating(rating)}>
               <Star
                 size={48}
                 color={rating <= selectedRating ? '#FFD700' : '#333333'}
@@ -44,17 +83,18 @@ export default function RateScreen() {
 
         <Text style={styles.ratingText}>
           {selectedRating > 0
-            ? selectedRating === 5
-              ? 'Excellent!'
-              : selectedRating === 4
-              ? 'Great!'
-              : selectedRating === 3
-              ? 'Good'
-              : selectedRating === 2
-              ? 'Fair'
-              : 'Poor'
+            ? ['Poor', 'Fair', 'Good', 'Great!', 'Excellent!'][selectedRating - 1]
             : 'Tap a star to rate'}
         </Text>
+
+        <TextInput
+          style={styles.feedbackInput}
+          placeholder="Write your feedback here..."
+          placeholderTextColor="#999"
+          multiline
+          value={feedback}
+          onChangeText={setFeedback}
+        />
 
         <Pressable
           style={[styles.submitButton, !selectedRating && styles.submitButtonDisabled]}
@@ -67,6 +107,7 @@ export default function RateScreen() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -118,6 +159,20 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     marginBottom: 32,
   },
+  feedbackInput: {
+    width: '100%',
+    minHeight: 100,
+    borderColor: '#FF00FF',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    color: '#fff',
+    fontFamily: 'Rajdhani',
+    fontSize: 16,
+    marginBottom: 24,
+    backgroundColor: '#1a1a1a',
+  },
+
   submitButton: {
     backgroundColor: '#FF00FF',
     borderRadius: 20,

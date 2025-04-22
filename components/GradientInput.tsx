@@ -1,27 +1,33 @@
-import { LinearGradient } from "expo-linear-gradient";
+// components/GradientInput.tsx
 
-const GradientInput = ({ children }: { children: React.ReactNode }) => (
-    <LinearGradient
-        colors={['#FF00FF', '#8000FF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientBorder}
-    >
-        {children}
-    </LinearGradient>
-);
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, ViewStyle } from 'react-native';
 
-gradientBorder: {
-    padding: 2, // border thickness
+type GradientInputProps = {
+    children: React.ReactNode;
+    style?: ViewStyle;
+};
+
+const GradientInput = ({ children, style }: GradientInputProps) => {
+    return (
+        <LinearGradient
+            colors={['#FF00FF', '#8000FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.gradientBorder, style]}
+        >
+            {children}
+        </LinearGradient>
+    );
+};
+
+const styles = StyleSheet.create({
+    gradientBorder: {
+        padding: 2,
         borderRadius: 24,
-            marginBottom: 16,
-  },
-inputInner: {
-    height: 48,
-        backgroundColor: '#000',
-            borderRadius: 22,
-                paddingHorizontal: 16,
-                    color: '#FFF',
-                        fontFamily: 'Rajdhani',
-                            justifyContent: 'center',
-  },
+        marginBottom: 16,
+    },
+});
+
+export default GradientInput;
