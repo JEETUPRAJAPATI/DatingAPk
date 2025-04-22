@@ -101,7 +101,7 @@ export default function SettingsScreen() {
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </Pressable>
 
-              <Pressable onPress={handleLogout} style={{ width: '100%' }}>
+              <Pressable onPress={handleLogout} style={{ width: '50%' }}>
                 <LinearGradient
                   colors={['#FF00FF', '#D000FF', '#8000FF']}
                   start={{ x: 0, y: 0 }}
