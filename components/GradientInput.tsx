@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     gradientBorder: {
         padding: 2,
         borderRadius: 24,
-        marginBottom: 16,
+        marginBottom: 10,
     },
 });
 

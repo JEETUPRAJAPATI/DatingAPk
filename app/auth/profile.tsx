@@ -143,139 +143,208 @@ export default function ProfileScreen() {
       <Text style={styles.subtitle}>Tell us about yourself</Text>
 
       <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+
+        {/** Full Name */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Full Name*</Text>
-          <TextInput
-            style={styles.input}
-            value={profile.fullName}
-            onChangeText={(text) => handleChange('fullName', text)}
-            placeholderTextColor="#666"
-          />
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.fullName}
+                onChangeText={(text) => handleChange('fullName', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. John Doe"
+              />
+            </View>
+          </LinearGradient>
         </View>
 
+        {/** Email */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email*</Text>
-          <TextInput
-            style={styles.input}
-            value={profile.email}
-            onChangeText={(text) => handleChange('email', text)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor="#666"
-          />
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.email}
+                onChangeText={(text) => handleChange('email', text)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholderTextColor="#666"
+                placeholder="e.g. farhan@gmail.com"
+              />
+            </View>
+          </LinearGradient>
         </View>
 
+        {/** About You */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>About You*</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={profile.bio}
-            onChangeText={(text) => handleChange('bio', text)}
-            multiline
-            numberOfLines={4}
-            placeholderTextColor="#666"
-          />
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={profile.bio}
+                onChangeText={(text) => handleChange('bio', text)}
+                multiline
+                numberOfLines={4}
+                placeholderTextColor="#666"
+                placeholder="e.g. I am a software engineer..."
+              />
+            </View>
+          </LinearGradient>
         </View>
 
+        {/** Interests */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Interests</Text>
-          <TextInput
-            style={styles.input}
-            value={profile.interests}
-            onChangeText={(text) => handleChange('interests', text)}
-            placeholderTextColor="#666"
-          />
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.interests}
+                onChangeText={(text) => handleChange('interests', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. abc"
+              />
+            </View>
+          </LinearGradient>
         </View>
 
+        {/** Hobbies */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Hobbies</Text>
-          <TextInput
-            style={styles.input}
-            value={profile.hobbies}
-            onChangeText={(text) => handleChange('hobbies', text)}
-            placeholderTextColor="#666"
-          />
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.hobbies}
+                onChangeText={(text) => handleChange('hobbies', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. abc"
+              />
+            </View>
+          </LinearGradient>
         </View>
 
+        {/** Height & Weight */}
         <View style={styles.row}>
           <View style={[styles.inputContainer, styles.halfWidth]}>
             <Text style={styles.label}>Height</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.height}
-              onChangeText={(text) => handleChange('height', text)}
-              keyboardType="numeric"
-              placeholderTextColor="#666"
-            />
+            <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+              <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+                <TextInput
+                  style={styles.input}
+                  value={profile.height}
+                  onChangeText={(text) => handleChange('height', text)}
+                  keyboardType="numeric"
+                  placeholderTextColor="#666"
+                  placeholder="e.g. 180cm"
+                />
+              </View>
+            </LinearGradient>
           </View>
 
           <View style={[styles.inputContainer, styles.halfWidth]}>
             <Text style={styles.label}>Weight</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.weight}
-              onChangeText={(text) => handleChange('weight', text)}
-              keyboardType="numeric"
-              placeholderTextColor="#666"
-            />
+            <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+              <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+                <TextInput
+                  style={styles.input}
+                  value={profile.weight}
+                  onChangeText={(text) => handleChange('weight', text)}
+                  keyboardType="numeric"
+                  placeholderTextColor="#666"
+                  placeholder="e.g. 66kg"
+                />
+              </View>
+            </LinearGradient>
           </View>
         </View>
 
+        {/** Skin Color */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Skin Color</Text>
-          <TextInput
-            style={styles.input}
-            value={profile.skinColor}
-            onChangeText={(text) => handleChange('skinColor', text)}
-            placeholderTextColor="#666"
-          />
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.skinColor}
+                onChangeText={(text) => handleChange('skinColor', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. white, brown, black"
+              />
+            </View>
+          </LinearGradient>
         </View>
 
+        {/** Age & Category */}
         <View style={styles.row}>
           <View style={[styles.inputContainer, styles.halfWidth]}>
             <Text style={styles.label}>Age</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.age}
-              onChangeText={(text) => handleChange('age', text)}
-              keyboardType="numeric"
-              placeholderTextColor="#666"
-            />
+            <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+              <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+                <TextInput
+                  style={styles.input}
+                  value={profile.age}
+                  onChangeText={(text) => handleChange('age', text)}
+                  keyboardType="numeric"
+                  placeholderTextColor="#666"
+                  placeholder="e.g. 25"
+                />
+              </View>
+            </LinearGradient>
           </View>
 
           <View style={[styles.inputContainer, styles.halfWidth]}>
             <Text style={styles.label}>Category</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.category}
-              onChangeText={(text) => handleChange('category', text)}
-              placeholderTextColor="#666"
-            />
+            <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+              <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+                <TextInput
+                  style={styles.input}
+                  value={profile.category}
+                  onChangeText={(text) => handleChange('category', text)}
+                  placeholderTextColor="#666"
+                  placeholder="e.g. Friendship, Dating"
+                />
+              </View>
+            </LinearGradient>
           </View>
         </View>
 
+        {/** Likes */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Likes</Text>
-          <TextInput
-            style={styles.input}
-            value={profile.likes}
-            onChangeText={(text) => handleChange('likes', text)}
-            placeholder="e.g. Gym, Travel, Music"
-            placeholderTextColor="#666"
-          />
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.likes}
+                onChangeText={(text) => handleChange('likes', text)}
+                placeholder="e.g. Gym, Travel, Music"
+                placeholderTextColor="#666"
+              />
+            </View>
+          </LinearGradient>
         </View>
 
-
+        {/** Address */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Address</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={profile.address}
-            onChangeText={(text) => handleChange('address', text)}
-            multiline
-            numberOfLines={3}
-            placeholderTextColor="#666"
-          />
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={profile.address}
+                onChangeText={(text) => handleChange('address', text)}
+                multiline
+                numberOfLines={3}
+                placeholderTextColor="#666"
+                placeholder='e.g. 123 Main St, City, Country'
+              />
+            </View>
+          </LinearGradient>
         </View>
 
         <Pressable
@@ -354,20 +423,25 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 56,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#FF00FF',
     borderRadius: 12,
     color: '#fff',
     fontFamily: 'Rajdhani',
     fontSize: 16,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    backgroundColor: 'transparent',
   },
   textArea: {
     height: 120,
     textAlignVertical: 'top',
     paddingTop: 16,
   },
+  inputGradient: {
+    borderRadius: 12,
+    padding: 2,
+  },
+
   row: {
     flexDirection: 'row',
     gap: 16,

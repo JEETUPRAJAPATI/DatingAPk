@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import DateGame from '@/components/DateGame';
 import GameResults from '@/components/GameResults';
+import { useFilter } from '../context/filterContext';
 
 
 interface Match {
@@ -70,6 +71,8 @@ export default function MatchesScreen() {
   const [showGameStages, setShowGameStages] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [selectedStage, setSelectedStage] = useState<string>('');
+  const { filters } = useFilter();
+  console.log("filters in matechs screen : ", filters)
   const [gameResults, setGameResults] = useState<{
     answers: string[];
     shared: number;

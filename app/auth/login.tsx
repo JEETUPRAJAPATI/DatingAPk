@@ -31,15 +31,6 @@ export default function LoginScreen() {
     }
   };
 
-  // const handleLoginwithNumber = async () => {
-  //   if (phoneNumber.length >= 10) {
-  //     router.push({
-  //       pathname: '/auth/verify',
-  //       params: { mode: 'login' }
-  //     });
-  //   }
-  // };
-
   const handleLoginwithNumber = async () => {
     try {
       const res = await fetch(`${apiUrl}/auth/send-otp`, {
@@ -129,17 +120,26 @@ export default function LoginScreen() {
           <View style={styles.dividerLine} />
         </View>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number"
-            placeholderTextColor="#666"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            maxLength={15}
-          />
-        </View>
+        <LinearGradient
+          colors={['#FF00FF', '#8000FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.inputGradientBorder}
+        >
+          <View style={styles.inputBackgroundFix}>
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              placeholderTextColor="#666"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              maxLength={15}
+            />
+          </View>
+        </LinearGradient>
+
+
 
         <Pressable
           onPress={handleLoginwithNumber}
@@ -276,16 +276,34 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 24,
   },
+  inputBackgroundFix: {
+    borderRadius: 26,
+    backgroundColor: '#000',
+    padding: 0,
+    overflow: 'hidden',
+  },
+  inputGradientBorder: {
+    borderRadius: 28,
+    padding: 2,
+    marginBottom: 24,
+    width: "100%"
+  },
+
+  inputInnerWrapper: {
+    borderRadius: 26,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
+
   input: {
     height: 56,
-    borderWidth: 2,
-    borderColor: '#FF00FF',
-    borderRadius: 28,
+    borderWidth: 0,
+    borderRadius: 26,
     color: '#fff',
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
     paddingHorizontal: 20,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    backgroundColor: 'transparent',
   },
   button: {
     width: '100%',

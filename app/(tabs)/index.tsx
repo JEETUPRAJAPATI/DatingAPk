@@ -16,6 +16,7 @@ import {
 import { Sparkles, Zap, X, Settings, SlidersHorizontal, MapPin, MoveVertical as MoreVertical } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { router } from 'expo-router';
+import { useFilter } from '../context/filterContext';
 
 const SWIPE_THRESHOLD = 100;
 
@@ -78,18 +79,15 @@ const profiles: Profile[] = [
   },
 ];
 
+
+
 export default function ExploreScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    location: 'New York City',
-    gender: null,
-    ageRange: [20, 40],
-    distance: 25,
-  });
-
+  const { filters, setFilters, resetFilters } = useFilter();
+  console.log("filters : ", filters)
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
@@ -302,6 +300,7 @@ export default function ExploreScreen() {
                     onChangeText={(text) => setFilters({ ...filters, location: text })}
                     placeholder="Enter location"
                     placeholderTextColor="rgba(255, 0, 255, 0.5)"
+                    underlineColorAndroid="transparent"
                   />
                 </View>
               </View>
@@ -416,9 +415,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   logo: {
-    width: 60,  // Adjust the width of the logo
-    height: 60, // Adjust the height of the logo
-    resizeMode: 'contain',  // This ensures the logo keeps its aspect ratio
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
   },
   header: {
     paddingTop: 60,

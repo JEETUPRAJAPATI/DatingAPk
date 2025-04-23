@@ -64,16 +64,24 @@ export default function SignupScreen() {
         <Text style={styles.subtitle}>We'll send you a verification code</Text>
 
         <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number"
-            placeholderTextColor="#666"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            maxLength={15}
-          />
+          <LinearGradient
+            colors={['#FF00FF', '#D000FF', '#8000FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.inputGradientBorder}
+          >
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              placeholderTextColor="#666"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              maxLength={15}
+            />
+          </LinearGradient>
         </View>
+
 
         <Pressable
           onPress={handleSignup}
@@ -148,14 +156,19 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 24,
   },
+  inputGradientBorder: {
+    paddingBottom: 2,
+  },
+
   input: {
     height: 56,
-    borderBottomWidth: 2,
-    borderBottomColor: '#FF00FF',
     color: '#fff',
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
     paddingHorizontal: 8,
+    backgroundColor: '#000', // match container bg
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   button: {
     width: '100%',

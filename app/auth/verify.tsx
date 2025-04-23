@@ -119,25 +119,32 @@ export default function VerifyScreen() {
 
         <View style={styles.otpContainer}>
           {otp.map((digit, index) => (
-            <TextInput
+            <LinearGradient
               key={index}
-              ref={ref => inputRefs.current[index] = ref}
-              style={[
-                styles.otpInput,
-                digit && styles.otpInputFilled
-              ]}
-              maxLength={1}
-              keyboardType="number-pad"
-              value={digit}
-              onChangeText={(text) => handleOtpChange(text, index)}
-              onKeyPress={({ nativeEvent }) => {
-                if (nativeEvent.key === 'Backspace' && !digit && index > 0) {
-                  inputRefs.current[index - 1]?.focus();
-                }
-              }}
-            />
+              colors={['#FF00FF', '#D000FF', '#8000FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.otpGradientBorder}
+            >
+              <View style={styles.otpInner}>
+                <TextInput
+                  ref={ref => inputRefs.current[index] = ref}
+                  style={styles.otpInput}
+                  maxLength={1}
+                  keyboardType="number-pad"
+                  value={digit}
+                  onChangeText={(text) => handleOtpChange(text, index)}
+                  onKeyPress={({ nativeEvent }) => {
+                    if (nativeEvent.key === 'Backspace' && !digit && index > 0) {
+                      inputRefs.current[index - 1]?.focus();
+                    }
+                  }}
+                />
+              </View>
+            </LinearGradient>
           ))}
         </View>
+
 
         <Pressable
           onPress={handleVerify}
@@ -254,4 +261,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#000000',
   },
+  otpGradientBorder: {
+    borderRadius: 14,
+    padding: 2,
+  },
+  otpInner: {
+    backgroundColor: '#000',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  otpInput: {
+    width: 56,
+    height: 56,
+    color: '#fff',
+    fontFamily: 'Rajdhani-SemiBold',
+    fontSize: 24,
+    textAlign: 'center',
+  },
+
 });

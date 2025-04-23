@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, Bell } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function NotificationsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -18,7 +19,7 @@ export default function NotificationsScreen() {
 
       <View style={styles.content}>
         <Bell size={64} color="#FF00FF" strokeWidth={1.5} />
-        
+
         <Text style={styles.title}>Stay Updated</Text>
         <Text style={styles.subtitle}>
           Get notified about new matches and messages
@@ -36,8 +37,25 @@ export default function NotificationsScreen() {
           </Text>
         </View>
 
-        <Pressable style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>Continue</Text>
+        <Pressable onPress={handleContinue} style={{ width: '100%' }}>
+          <LinearGradient
+            colors={['#FF00FF', '#D000FF', '#8000FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              height: 56,
+              borderRadius: 28,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#FF00FF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 10,
+              elevation: 5,
+            }}
+          >
+            <Text style={styles.buttonText}>Continue</Text>
+          </LinearGradient>
         </Pressable>
       </View>
     </View>
