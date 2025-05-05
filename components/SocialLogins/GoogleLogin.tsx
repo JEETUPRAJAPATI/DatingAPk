@@ -76,7 +76,7 @@ export default function GoogleLoginButton({ onSuccess }: GoogleLoginButtonProps)
 
     return (
         // <Pressable style={styles.socialButton} onPress={handleLogin} disabled={isLoading}>
-        <Pressable style={styles.socialButton} onPress={handleLogin} disabled={isLoading}>
+        <Pressable style={styles.socialButton}  disabled={isLoading}>
             <FontAwesome name="google" size={29} color="#03d7fc" style={styles.socialIcon} />
             <Text style={styles.socialButtonText}>Continue with Google</Text>
         </Pressable>
