@@ -6,34 +6,19 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { API_BASE_URL } from '../apiUrl';
 import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
+import SocialLoginButtons from '@/components/SocialLogins/SocialLogins';
+import GoogleLoginButton from '@/components/SocialLogins/GoogleLogin';
 
 type SocialProvider = 'google' | 'facebook' | 'apple';
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const apiUrl = API_BASE_URL;
-  console.log('API URL:', apiUrl);
 
-  const handleSocialLogin = async (provider: SocialProvider) => {
-    setIsLoading(true);
-    try {
-      // Simulate social authentication
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Simulate fetching phone number from social profile
-      const mockPhoneNumber = '+1234567890';
-      setPhoneNumber(mockPhoneNumber);
-    } catch (error) {
-      console.error('Social login error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleLoginwithNumber = async () => {
     try {
-      const res = await fetch(`${apiUrl}/auth/send-otp`, {
+      const res = await fetch(`${API_BASE_URL}/auth/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,6 +60,10 @@ export default function LoginScreen() {
     }
   };
 
+  const handleLoginSuccess = (provider: any, token: string) => {
+    console.log(`Logged in with ${provider}:`, token);
+  };
+
   return (
     <View style={styles.container}>
       <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -85,34 +74,8 @@ export default function LoginScreen() {
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to continue</Text>
 
-        <View style={styles.socialButtons}>
-          <Pressable
-            style={styles.socialButton}
-            onPress={() => handleSocialLogin('google')}
-            disabled={isLoading}
-          >
-            <FontAwesome name="google" size={24} color="#DB4437" style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Continue with Google</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.socialButton}
-            onPress={() => handleSocialLogin('facebook')}
-            disabled={isLoading}
-          >
-            <FontAwesome name="facebook" size={24} color="#3b5998" style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Continue with Facebook</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.socialButton}
-            onPress={() => handleSocialLogin('apple')}
-            disabled={isLoading}
-          >
-            <FontAwesome name="apple" size={29} color="#841fcc" style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Continue with Apple</Text>
-          </Pressable>
-        </View>
+        <GoogleLoginButton onSuccess={handleLoginSuccess} />
+        <SocialLoginButtons onSuccess={handleLoginSuccess} />
 
         <View style={styles.divider}>
           <View style={styles.dividerLine} />
@@ -228,12 +191,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 56,
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   appleButton: {
     backgroundColor: '#000',
@@ -250,7 +213,7 @@ const styles = StyleSheet.create({
   socialButtonText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
-    color: '#FF00FF',
+    color: '#03d7fc',
   },
   appleButtonText: {
     color: '#FFF',

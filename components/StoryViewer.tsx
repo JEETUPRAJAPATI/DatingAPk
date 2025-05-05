@@ -63,24 +63,24 @@ export default function StoryViewer({ visible, onClose, stories, currentIndex }:
 
     const handleShare = () => {
         // Implement share functionality
-        console.log('Sharing story:', currentStory.id);
+        console.log('Sharing story:', currentStory?.id);
     };
 
     const handleLike = () => {
         // Implement like functionality
-        console.log('Liking story:', currentStory.id);
+        console.log('Liking story:', currentStory?.id);
     };
 
     const handleComment = () => {
         // Implement comment functionality
-        console.log('Commenting on story:', currentStory.id);
+        console.log('Commenting on story:', currentStory?.id);
     };
 
     return (
         <Modal visible={visible} transparent animationType="fade">
             <View style={styles.container}>
                 <Image
-                    source={{ uri: currentStory.imageUrl }}
+                    source={{ uri: currentStory?.imageUrl }}
                     style={styles.image}
                 />
 
@@ -109,12 +109,12 @@ export default function StoryViewer({ visible, onClose, stories, currentIndex }:
                     <View style={styles.headerContent}>
                         <View style={styles.userInfo}>
                             <View style={styles.avatarContainer}>
-                                <Image source={{ uri: currentStory.imageUrl }} style={styles.avatar} />
+                                <Image source={{ uri: currentStory?.imageUrl }} style={styles.avatar} />
                                 <View style={styles.onlineIndicator} />
                             </View>
                             <View>
                                 <Text style={styles.username}>Jessica Parker</Text>
-                                <Text style={styles.timestamp}>{currentStory.timestamp}</Text>
+                                <Text style={styles.timestamp}>{currentStory?.timestamp}</Text>
                             </View>
                         </View>
 

@@ -2,21 +2,31 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const defaultProfile = {
-    fullname: '',
+    name: '',
     email: '',
+    mobile: '',
     i_am: '',
     interested_in: '',
-    age: '',
+    age: null,
     about: '',
     likes: [],
     interests: [],
     hobbies: [],
     skin_color: '',
-    height: '',
-    weight: '',
-    address: '',
-    category: '',
+    height: null,
+    weight: null,
+    address: {
+        country: '',
+        state: '',
+        city: '',
+        pincode: '',
+        locality: ''
+    },
+    profession: '',
+    marital_status: '',
+    category: ''
 };
+
 
 const UserProfileContext = createContext(null);
 
@@ -81,6 +91,7 @@ export const UserProfileProvider = ({ children }) => {
                 profile,
                 updateProfile,
                 user,
+                setUser,
                 token,
                 login,
                 logout,

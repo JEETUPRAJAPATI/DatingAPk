@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import { useUserProfile } from '../context/userContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import { API_BASE_URL } from '../apiUrl';
+import { useInterests } from '../context/interestContext';
 
-type Gender = 'man' | 'woman' | 'other';
+type Gender = 'Male' | 'Female' | 'Other';
 
 export default function GenderScreen() {
   const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
-  const { updateProfile, profile } = useUserProfile();
+  const { updateProfile, profile, token } = useUserProfile();
 
-  console.log("profile : ", profile)
 
   const handleContinue = () => {
     if (selectedGender) {
@@ -19,6 +20,7 @@ export default function GenderScreen() {
       router.push('/auth/looking-for');
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -31,7 +33,7 @@ export default function GenderScreen() {
         <Text style={styles.subtitle}>Select your gender</Text>
 
         <View style={styles.optionsContainer}>
-          {(['man', 'woman', 'other'] as Gender[]).map((gender) => (
+          {(['Male', 'Female', 'Other'] as Gender[]).map((gender) => (
             <Pressable
               key={gender}
               style={[
@@ -129,15 +131,15 @@ const styles = StyleSheet.create({
   option: {
     height: 56,
     borderWidth: 2,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
   optionSelected: {
-    backgroundColor: '#FF00FF',
-    shadowColor: '#FF00FF',
+    backgroundColor: '#03d7fc',
+    shadowColor: '#03d7fc',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 10,
@@ -146,7 +148,7 @@ const styles = StyleSheet.create({
   optionText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
-    color: '#FF00FF',
+    color: '#03d7fc',
   },
   optionTextSelected: {
     color: '#000',

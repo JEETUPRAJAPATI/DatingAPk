@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const paymentMethods = [
   {
@@ -59,9 +60,17 @@ export default function PaymentMethodScreen() {
           </Pressable>
         ))}
 
-        <Pressable style={styles.payButton} onPress={handlePayment}>
-          <Text style={styles.payButtonText}>Process to Pay</Text>
-        </Pressable>
+        <LinearGradient
+          colors={['#FF00FF', '#D000FF', '#8000FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.payButtonGradient}
+        >
+          <Pressable onPress={handlePayment}>
+            <Text style={styles.payButtonText}>Process to Pay</Text>
+          </Pressable>
+        </LinearGradient>
+
       </View>
     </View>
   );
@@ -98,12 +107,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   planCard: {
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderRadius: 16,
     padding: 20,
     marginBottom: 32,
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   planName: {
     fontFamily: 'Orbitron-Bold',
@@ -125,12 +134,12 @@ const styles = StyleSheet.create({
   methodButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   methodLogo: {
     width: 80,
@@ -142,21 +151,27 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#FFFFFF',
   },
-  payButton: {
-    backgroundColor: '#FF00FF',
-    borderRadius: 28,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 'auto',
-    shadowColor: '#FF00FF',
+  payButtonGradient: {
+    backgroundColor: 'rgba(255, 0, 255, 0.2)', // Soft fallback color (for old devices)
+    borderRadius: 28, // Rounded corners
+    padding: 16,  // Ensure there's enough padding inside the button
+    alignItems: 'center', // Center content horizontally
+    justifyContent: 'center', // Center content vertically
+    marginTop: 'auto', // Align the button to the bottom (for flex layouts)
+    shadowColor: '#FF00FF',  // Gradient border shadow effect
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.5,  // Shadow intensity
+    shadowRadius: 10,  // Shadow radius for softer edges
+    elevation: 5,  // Add elevation for android (shadow effect)
+    width: '100%',  // Ensure the gradient fills the button's full width
   },
+
   payButtonText: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 18,
-    color: '#000000',
-  },
+    fontFamily: 'Rajdhani-SemiBold',  // Bold font for emphasis
+    fontSize: 18,  // Adjusted font size for readability
+    color: '#000',  // Black color for the text
+    textAlign: 'center',  // Ensure text is centered
+    fontWeight: 'bold',  // Bold text for better visibility
+  }
+
 });

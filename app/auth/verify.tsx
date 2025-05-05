@@ -52,16 +52,6 @@ export default function VerifyScreen() {
 
         if (data.status === true) {
 
-          // Assuming you get the user data and token after OTP verification
-          const { user, token } = data.data;
-
-          // Store user and token in context and AsyncStorage
-          login({ userData: user, token });
-          if (mode === 'signup') {
-            router.push('/auth/gender');
-          } else {
-            router.push('/auth/verification-success');
-          }
 
           // Success Toast
           Toast.show({
@@ -70,6 +60,21 @@ export default function VerifyScreen() {
             text2: 'You have successfully verified your OTP.',
             position: 'top',
           });
+          // Assuming you get the user data and token after OTP verification
+          const { user, token } = data.data;
+
+          // Store user and token in context and AsyncStorage
+          login({ userData: user, token });
+
+          console.log("login and signup res after otp verified : ", data)
+
+          // Navigate after login and signup
+          if (data.data.user.isProfileComplete === false) {
+            router.push('/auth/gender');
+          } else {
+            router.push('/auth/verification-success');
+          }
+
 
         } else {
           // Error Toast if OTP verification fails

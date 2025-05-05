@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { Heart } from 'lucide-react-native';
-
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle } from 'react-native-svg'; // Import Svg and Circle
+// Create an animated version of the Circle component
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 interface Question {
   id: string;
   text: string;
@@ -70,12 +73,27 @@ export default function DateGame({ stage, onComplete, onClose }: GameProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(30);
-  const [progress] = useState(new Animated.Value(0));
+  const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    let timer: NodeJS.Timeout;
+
+    // Reset progress to 0 and start new animation
+    progress.setValue(0);
+    const animation = Animated.timing(progress, {
+      toValue: 1,
+      duration: 32000,
+      useNativeDriver: false,
+    });
+
+    animation.start();
+
+    timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
+          clearInterval(timer);
+          animation.stop(); // Just in case
+          progress.setValue(1); // Forcefully jump to end of animation
           handleTimeout();
           return 0;
         }
@@ -83,14 +101,14 @@ export default function DateGame({ stage, onComplete, onClose }: GameProps) {
       });
     }, 1000);
 
-    Animated.timing(progress, {
-      toValue: 1,
-      duration: 30000,
-      useNativeDriver: false,
-    }).start();
 
-    return () => clearInterval(timer);
+    // Cleanup timer and animation
+    return () => {
+      clearInterval(timer);
+      animation.stop();
+    };
   }, [currentQuestion]);
+
 
   const handleTimeout = () => {
     if (currentQuestion < questions[stage].length - 1) {
@@ -121,22 +139,48 @@ export default function DateGame({ stage, onComplete, onClose }: GameProps) {
     onComplete({ answers, shared: sharedAnswers });
   };
 
-  const progressWidth = progress.interpolate({
+  const RADIUS = 58;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+  const progressStrokeDashoffset = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
+    outputRange: [CIRCUMFERENCE, 0],
   });
+
+
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.timer}>{timeLeft}s</Text>
-        <Animated.View
-          style={[
-            styles.progressBar,
-            { width: progressWidth },
-          ]}
-        />
+        <View style={styles.circleWrapper}>
+          <Svg width="120" height="120" viewBox="0 0 120 120">
+            <Circle
+              cx="60"
+              cy="60"
+              r="58"
+              stroke="#e6e6e6"
+              strokeWidth="4"
+              fill="none"
+            />
+            <AnimatedCircle
+              cx="60"
+              cy="60"
+              r={RADIUS}
+              stroke="#FF00FF"
+              strokeWidth="4"
+              fill="none"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={progressStrokeDashoffset}
+              strokeLinecap="round"
+              transform="rotate(-90 60 60)" // <-- magic line
+            />
+
+
+          </Svg>
+          <Text style={styles.timer}>{timeLeft}s</Text>
+        </View>
       </View>
+
 
       <View style={styles.questionContainer}>
         <Text style={styles.questionNumber}>
@@ -159,9 +203,17 @@ export default function DateGame({ stage, onComplete, onClose }: GameProps) {
         ))}
       </View>
 
-      <Pressable style={styles.closeButton} onPress={onClose}>
-        <Text style={styles.closeButtonText}>End Game</Text>
-      </Pressable>
+      {/* Apply LinearGradient to the End Game button */}
+      <LinearGradient
+        colors={['#FF00FF', '#D000FF', '#8000FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.closeButton}  // Apply the same styles
+      >
+        <Pressable onPress={onClose}>
+          <Text style={styles.closeButtonText}>End Game</Text>
+        </Pressable>
+      </LinearGradient>
     </View>
   );
 }
@@ -174,13 +226,24 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
+    marginTop: 16,
+    alignItems: 'center',
   },
+
+  circleWrapper: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+
   timer: {
+    position: 'absolute',
     fontFamily: 'Orbitron-Bold',
     fontSize: 24,
     color: '#FF00FF',
     textAlign: 'center',
-    marginBottom: 8,
   },
   progressBar: {
     height: 4,
@@ -199,23 +262,23 @@ const styles = StyleSheet.create({
   questionText: {
     fontFamily: 'Orbitron-Bold',
     fontSize: 24,
-    color: '#FFFFFF',
+    color: '#03d7fc',
     textAlign: 'center',
   },
   optionsContainer: {
     gap: 16,
   },
   option: {
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderWidth: 2,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 12,
     padding: 16,
   },
   optionText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
-    color: '#FFFFFF',
+    color: '#03d7fc',
     textAlign: 'center',
   },
   closeButton: {
@@ -230,7 +293,7 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 16,
-    color: '#FF00FF',
+    color: '#000000',
   },
   errorText: {
     fontFamily: 'Rajdhani-SemiBold',

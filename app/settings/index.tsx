@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { Info, FileText, Shield, Trash2, Star, LogOut, ArrowLeft } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useUserProfile } from '../context/userContext';
 
 interface SettingItem {
   icon: JSX.Element;
@@ -14,10 +15,12 @@ interface SettingItem {
 
 export default function SettingsScreen() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { logout } = useUserProfile();
 
   const handleLogout = () => {
+    logout()
     setShowLogoutModal(false);
-    router.replace('/');
+    router.push('/auth/login');
   };
 
   const settings: SettingItem[] = [
@@ -171,11 +174,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    // backgroundColor: 'rgba(0, 229, 255, 0.05)',
+    borderColor: '#03d7fc',
     gap: 16,
   },
   settingText: {
@@ -196,7 +200,7 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '80%',
     borderWidth: 2,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   modalTitle: {
     fontFamily: 'Orbitron-Bold',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable, Modal, TextInput, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -17,6 +17,9 @@ import { Sparkles, Zap, X, Settings, SlidersHorizontal, MapPin, MoveVertical as 
 import Slider from '@react-native-community/slider';
 import { router } from 'expo-router';
 import { useFilter } from '../context/filterContext';
+import axios from 'axios';
+import { API_BASE_URL } from '../apiUrl';
+import { useUserProfile } from '../context/userContext';
 
 const SWIPE_THRESHOLD = 100;
 
@@ -36,62 +39,66 @@ interface FilterState {
   distance: number;
 }
 
-const profiles: Profile[] = [
-  {
-    id: '1',
-    name: 'Sarah',
-    age: 28,
-    bio: 'Adventure seeker and coffee enthusiast. Let\'s explore the world together! 🌎✈️',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-    location: 'New York, NY',
-  },
-  {
-    id: '2',
-    name: 'Alex',
-    age: 26,
-    bio: 'Music lover and amateur photographer. Looking for someone to share concerts and creative moments with. 🎵📸',
-    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop',
-    location: 'Los Angeles, CA',
-  },
-  {
-    id: '3',
-    name: 'Emma',
-    age: 24,
-    bio: 'Yoga instructor and plant mom. Seeking a partner in crime for mindful adventures and lazy Sundays. 🧘‍♀️🌿',
-    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-    location: 'Miami, FL',
-  },
-  {
-    id: '4',
-    name: 'Nidhi',
-    age: 24,
-    bio: 'Yoga instructor and plant mom. Seeking a partner in crime for mindful adventures and lazy Sundays. 🧘‍♀️🌿',
-    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-    location: 'Miami, FL',
-  },
-  {
-    id: '5',
-    name: 'Yashwant Gupta',
-    age: 24,
-    bio: 'Yoga instructor and plant mom. Seeking a partner in crime for mindful adventures and lazy Sundays. 🧘‍♀️🌿',
-    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-    location: 'Miami, FL',
-  },
-];
-
-
-
 export default function ExploreScreen() {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const { filters, setFilters, resetFilters } = useFilter();
-  console.log("filters : ", filters)
+  const { token } = useUserProfile();
+
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
-  const profile = profiles[currentIndex];
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const query = new URLSearchParams({
+          age_min: filters.ageRange[0]?.toString() || '18',
+          age_max: filters.ageRange[1]?.toString() || '100',
+          city: filters.location || '',
+        });
+
+        const response = await axios.get(`${API_BASE_URL}/user/matches?${query.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const formatted = response.data.matches.map((m: any) => ({
+          id: m.id,
+          name: m.name,
+          age: m.age,
+          bio: m.about,
+          image: m.profile_image ||
+            (m.i_am === 'Female'
+              ? 'https://img.freepik.com/free-psd/3d-rendering-hair-style-avatar-design_23-2151869123.jpg?semt=ais_hybrid&w=740'
+              : 'https://st.depositphotos.com/46542440/55685/i/450/depositphotos_556851336-stock-illustration-square-face-character-stiff-art.jpg'),
+          matchPercentage: Math.floor(Math.random() * 21) + 80,
+          lastActive: 'Just now',
+          location: m.city,
+          status: 'online',
+        }));
+
+        setProfiles(formatted);
+      } catch (error) {
+        console.error('Error fetching matches:', error);
+      }
+    };
+
+    fetchMatches();
+  }, [filters]);
+
+  // Safely check if there are profiles available before accessing `profile`
+  const profile = profiles[currentIndex] || {
+    id: '',
+    name: 'Loading...',
+    age: 0,
+    bio: 'Loading bio...',
+    image: 'https://example.com/loading.jpg', // Placeholder image
+    location: 'Loading...',
+  };
 
   const nextProfile = () => {
     if (currentIndex < profiles.length - 1) {
@@ -147,7 +154,7 @@ export default function ExploreScreen() {
   const handleViewProfile = () => {
     router.push({
       pathname: '/profile/view',
-      params: { id: profile.id }
+      params: { id: profile.id },
     });
   };
 
@@ -162,7 +169,6 @@ export default function ExploreScreen() {
 
   const handleApplyFilters = () => {
     setShowFilter(false);
-    // Apply filters logic here
   };
 
   return (
@@ -462,8 +468,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: '#FF00FF',
-    shadowColor: '#FF00FF',
+    borderColor: '#03d7fc',
+    shadowColor: '#03d7fc',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 10,
@@ -484,7 +490,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   profileInfo: {
-    marginBottom: 60,
+    marginBottom: 70,
   },
   name: {
     fontFamily: 'Orbitron-Bold',
@@ -571,7 +577,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    // borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     maxHeight: '90%',
   },
   filterHeader: {

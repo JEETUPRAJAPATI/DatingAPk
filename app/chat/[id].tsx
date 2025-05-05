@@ -1,95 +1,232 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Image, Modal } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Send, Smile, Image as ImageIcon, X, Paperclip } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import EmojiPicker from '@/components/EmojiPicker';
+import { API_BASE_URL, SOCKET_BASE_URL } from '../apiUrl';
+import { useUserProfile } from '../context/userContext';
+import io from 'socket.io-client';
+
 
 interface Message {
-  id: string;
-  text: string;
+  _id: string;
+  message: string;
   image?: string;
-  sender: 'user' | 'other';
+  sender_id: string;
+  receiver_id: string;
   timestamp: string;
+  read: boolean;
 }
 
-const users = {
-  '1': {
-    name: 'Sarah Parker',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-    online: true,
-    messages: [
-      {
-        id: '1',
-        text: 'Hey there! How are you?',
-        sender: 'other',
-        timestamp: '10:30 AM'
-      },
-      {
-        id: '2',
-        text: 'I am doing great! How about you?',
-        sender: 'user',
-        timestamp: '10:31 AM'
-      },
-      {
-        id: '3',
-        text: 'Would love to grab coffee sometime! ☕️',
-        sender: 'other',
-        timestamp: '10:32 AM'
-      }
-    ]
-  },
-  '2': {
-    name: 'Alex Johnson',
-    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop',
-    online: false,
-    messages: [
-      {
-        id: '1',
-        text: 'Hey Alex! How\'s your day going?',
-        sender: 'user',
-        timestamp: '9:30 AM'
-      },
-      {
-        id: '2',
-        text: 'Pretty good! Just finished a workout 💪',
-        sender: 'other',
-        timestamp: '9:45 AM'
-      }
-    ]
-  },
-  // Add more users...
-};
-
 export default function ChatScreen() {
-  const { id } = useLocalSearchParams();
-  const user = users[id as keyof typeof users];
-
-  const [messages, setMessages] = useState<Message[]>(user?.messages || []);
+  const { id: rawId } = useLocalSearchParams();
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
+  const { token, user: userProfile } = useUserProfile()
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [user, setUser] = useState<any>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [onlineStatus, setOnlineStatus] = useState(false);
+  const [typingStatus, setTypingStatus] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const socketRef = useRef<any>(null);
 
-  if (!user) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>User not found</Text>
-      </View>
-    );
-  }
+  console.log("online status : ", onlineStatus)
 
-  const handleSend = () => {
-    if (message.trim()) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: message,
-        sender: 'user',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  // Update the useEffect hook for socket events
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [resUser, resMessages] = await Promise.all([
+          fetch(`${API_BASE_URL}/user/details/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch(`${API_BASE_URL}/chat/history/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
+
+        const [userData, historyData] = await Promise.all([
+          resUser.json(),
+          resMessages.json(),
+        ]);
+
+        setUser(userData?.user);
+        setMessages(historyData?.messages);
+        console.log("msg history : ", historyData)
+        // Mark messages as read when they're initially loaded
+        historyData?.messages?.forEach(msg => {
+          if (!msg.read && msg?.sender_id !== userProfile?._id) {
+            socketRef.current?.emit('messageRead', {
+              messageId: msg._id || msg.id,
+              readerId: userProfile?._id,
+              senderId: msg.sender_id,
+            });
+          }
+        });
+
+      } catch (err) {
+        console.error('Failed to load chat data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Connect to the socket server
+    socketRef.current = io(SOCKET_BASE_URL);
+
+    // Join the user's personal room
+    if (userProfile?._id) {
+      socketRef.current.emit('join', userProfile?._id);
+
+    }
+    // Request initial online status
+    socketRef.current.emit('checkOnlineStatus', id);
+    // Online status handlers
+    socketRef.current.on('userOnline', (userId) => {
+      if (userId === id) {
+        setOnlineStatus(true);
+      }
+    });
+    socketRef.current.on('userOffline', (userId) => {
+      if (userId === id) {
+        setOnlineStatus(false);
+      }
+    });
+
+    socketRef.current.on('onlineStatusResponse', ({ userId, isOnline }) => {
+      if (userId === id) {
+        setOnlineStatus(isOnline);
+      }
+    });
+
+    // Receive messages
+    socketRef.current.on('receiveMessage', (newMsg: any) => {
+      console.log("new msg : ", newMsg)
+      if (!newMsg._id) {
+        console.error('Received message without ID:', newMsg);
+        return;
+      }
+      const incomingMessage: Message = {
+        _id: newMsg._id,
+        message: newMsg.message,
+        image: newMsg.file_url,
+        sender_id: newMsg.sender_id,
+        receiver_id: newMsg.receiver_id,
+        timestamp: new Date(newMsg.timestamp).toISOString(),
+        read: newMsg.read || false,
       };
-      setMessages([...messages, newMessage]);
+
+      setMessages(prev => [...prev, incomingMessage]);
+
+      // Mark as read if it's our message and we're viewing the chat
+      if (incomingMessage.receiver_id === userProfile._id && !incomingMessage.read) {
+        console.log("Incoming msg marking:", incomingMessage);
+        socketRef.current.emit('messageRead', {
+          messageId: incomingMessage._id,
+          readerId: userProfile._id,
+          senderId: incomingMessage.sender_id     // The original sender's id
+        });
+      }
+
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    });
+
+    // Handle read status updates
+    socketRef.current.on('messageReadUpdate', ({ messageId }) => {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg._id === messageId ? { ...msg, read: true } : msg
+        )
+      );
+    });
+
+    fetchData();
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [id, token, userProfile?._id]);
+
+
+  // Update the messageRead handler to include proper message marking
+  const handleMessageRead = (msgId: string, msgSenderId: string) => {
+    if (!msgId || !msgSenderId || msgSenderId === userProfile._id) return;
+    console.log('Marking message as read:', msgId, msgSenderId);
+
+    if (msgSenderId !== userProfile._id) {
+
+      // Find using _id
+      const messageToMark = messages.find(msg => msg._id === msgId);
+      if (messageToMark && messageToMark.receiver_id === userProfile._id) {
+        setMessages(prev =>
+          prev.map(msg =>
+            msg._id === msgId ? { ...msg, read: true } : msg
+          )
+        );
+
+        // Emit to server
+        socketRef.current.emit('messageRead', {
+          messageId: msgId,
+          readerId: userProfile._id,
+          senderId: msgSenderId
+        });
+      }
+    }
+  };
+
+  const handleSend = async () => {
+    if (message.trim()) {
+      const tempId = Date.now().toString();
+
+      const newMessage: Message = {
+        _id: tempId, // Use _id
+        message: message,
+        sender_id: userProfile._id,
+        receiver_id: id,
+        read: false,
+        timestamp: new Date().toISOString(),
+      };
+
+      setMessages(prev => [...prev, newMessage]);
       setMessage('');
       scrollViewRef.current?.scrollToEnd({ animated: true });
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/chat/send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            receiver_id: id,
+            type: 'text',
+            message: message,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data?.message?._id) {
+          setMessages(prev => prev.map(msg =>
+            msg._id === tempId ? {
+              ...msg,
+              _id: data.message._id, // Update to real _id
+              read: data.message.read
+            } : msg
+          ));
+        }
+      } catch (err) {
+        console.error('Failed to send message:', err);
+      }
     }
   };
 
@@ -97,6 +234,7 @@ export default function ChatScreen() {
     setMessage(prev => prev + emoji);
     setShowEmojiPicker(false);
   };
+
 
   const handleAttachment = async (type: 'camera' | 'gallery' | 'document') => {
     setShowAttachments(false);
@@ -110,9 +248,11 @@ export default function ChatScreen() {
       if (!result.canceled && result.assets[0]) {
         const newMessage: Message = {
           id: Date.now().toString(),
-          text: '',
+          message: '',
           image: result.assets[0].uri,
-          sender: 'user',
+          sender_id: userProfile._id,
+          receiver_id: id,
+          read: false,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setMessages([...messages, newMessage]);
@@ -121,16 +261,52 @@ export default function ChatScreen() {
     }
   };
 
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Loading chat...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>User not found</Text>
+      </View>
+    );
+  }
+
+  console.log("msgs in map : ", messages)
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <ArrowLeft size={24} color="#FF00FF" />
         </Pressable>
-        <Image source={{ uri: user.image }} style={styles.avatar} />
+
+        {user.profile_image ? (
+          <Image source={{ uri: user.profile_image }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatarFallback}>
+            <Text style={styles.avatarText}>
+              {user.name ? user.name.charAt(0).toUpperCase() : "?"}
+            </Text>
+          </View>
+        )}
         <View style={styles.headerInfo}>
           <Text style={styles.name}>{user.name}</Text>
-          <Text style={styles.status}>{user.online ? 'Online' : 'Offline'}</Text>
+          <View style={styles.statusIndicator}>
+            <View style={[
+              styles.statusDot,
+              { backgroundColor: onlineStatus ? '#4CAF50' : '#9E9E9E' }
+            ]} />
+            <Text style={styles.statusText}>
+              {onlineStatus ? 'Online' : 'Offline'}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -139,24 +315,49 @@ export default function ChatScreen() {
         style={styles.messagesContainer}
         contentContainerStyle={styles.messagesContent}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        onScroll={({ nativeEvent }) => {
+          // Mark messages as read when they become visible
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const isNearBottom = contentOffset.y >= contentSize.height - layoutMeasurement.height - 50;
+
+          if (isNearBottom) {
+            messages.forEach(msg => {
+              if (!msg.read && msg.sender_id !== userProfile._id && msg.receiver_id === userProfile._id) {
+                handleMessageRead(msg._id, msg.sender_id);
+              }
+            });
+          }
+        }}
+        scrollEventThrottle={400}
       >
         {messages.map((msg) => (
+
           <View
-            key={msg.id}
-            style={[
-              styles.messageWrapper,
-              msg.sender === 'user' ? styles.userMessage : styles.otherMessage
-            ]}
+            key={msg._id}
+            style={
+              [
+                styles.messageWrapper,
+                msg.receiver_id === id ? styles.userMessage : styles.otherMessage
+              ]}
+            onTouchEnd={() => handleMessageRead(msg._id, msg.sender_id)}
           >
             {msg.image ? (
-              <Image source={{ uri: msg.image }} style={styles.messageImage} />
+              <Image source={{ uri: user.image }} style={styles.messageImage} />
             ) : (
-              <Text style={styles.messageText}>{msg.text}</Text>
+              <Text style={styles.messageText}>{msg.message}</Text>
             )}
-            <Text style={styles.timestamp}>{msg.timestamp}</Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.timestamp}>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+              {msg?.sender_id === userProfile?._id && (
+                <Text style={{ marginLeft: 10, fontSize: 12 }}>
+                  {msg?.read ? '✔✔' : '✔'}
+                </Text>
+              )}
+            </View>
           </View>
-        ))}
-      </ScrollView>
+        ))
+        }
+      </ScrollView >
 
       <View style={styles.inputContainer}>
         <Pressable
@@ -243,7 +444,7 @@ export default function ChatScreen() {
           </View>
         </Pressable>
       </Modal>
-    </View>
+    </View >
   );
 }
 
@@ -268,6 +469,21 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 12,
+  },
+  avatarFallback: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    marginRight: 12,
+    borderColor: '#FF00FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 24,
+    color: '#fff', // Text color for the initial
+    fontWeight: 'bold',
   },
   headerInfo: {
     flex: 1,
@@ -314,6 +530,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
   },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 4,
+  },
   messageImage: {
     width: 200,
     height: 200,
@@ -334,6 +556,21 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 0, 255, 0.2)',
     gap: 12,
+  },
+  statusIndicator: {
+    marginTop: 1,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    color: '#666',
   },
   attachButton: {
     width: 40,

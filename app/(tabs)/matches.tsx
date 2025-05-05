@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable, ScrollView } from 'react-native';
 import { Video, MessageCircle, Gamepad2, Heart, MoveVertical as MoreVertical } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,7 +6,9 @@ import { router } from 'expo-router';
 import DateGame from '@/components/DateGame';
 import GameResults from '@/components/GameResults';
 import { useFilter } from '../context/filterContext';
-
+import { API_BASE_URL } from '../apiUrl';
+import axios from "axios"
+import { useUserProfile } from '../context/userContext';
 
 interface Match {
   id: string;
@@ -18,61 +20,104 @@ interface Match {
   status: 'online' | 'offline';
 }
 
-const matches: Match[] = [
-  {
-    id: '1',
-    name: 'Yashwant',
-    age: 24,
-    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-    matchPercentage: 95,
-    lastActive: '2m ago',
-    status: 'online',
-  },
-  {
-    id: '2',
-    name: 'Arju Pradhan',
-    age: 28,
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-    matchPercentage: 88,
-    lastActive: '1h ago',
-    status: 'offline',
-  },
-  {
-    id: '3',
-    name: 'Jessica',
-    age: 26,
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
-    matchPercentage: 92,
-    lastActive: 'Just now',
-    status: 'online',
-  },
-  {
-    id: '4',
-    name: 'Faran',
-    age: 26,
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
-    matchPercentage: 92,
-    lastActive: 'Just now',
-    status: 'online',
-  },
-  {
-    id: '5',
-    name: 'Nidhi',
-    age: 26,
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
-    matchPercentage: 92,
-    lastActive: 'Just now',
-    status: 'online',
-  },
-];
+// const matches: Match[] = [
+//   {
+//     id: '1',
+//     name: 'Yashwant',
+//     age: 24,
+//     image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
+//     matchPercentage: 95,
+//     lastActive: '2m ago',
+//     status: 'online',
+//   },
+//   {
+//     id: '2',
+//     name: 'Arju Pradhan',
+//     age: 28,
+//     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
+//     matchPercentage: 88,
+//     lastActive: '1h ago',
+//     status: 'offline',
+//   },
+//   {
+//     id: '3',
+//     name: 'Jessica',
+//     age: 26,
+//     image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
+//     matchPercentage: 92,
+//     lastActive: 'Just now',
+//     status: 'online',
+//   },
+//   {
+//     id: '4',
+//     name: 'Faran',
+//     age: 26,
+//     image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
+//     matchPercentage: 92,
+//     lastActive: 'Just now',
+//     status: 'online',
+//   },
+//   {
+//     id: '5',
+//     name: 'Nidhi',
+//     age: 26,
+//     image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
+//     matchPercentage: 92,
+//     lastActive: 'Just now',
+//     status: 'online',
+//   },
+// ];
 
 export default function MatchesScreen() {
+  const [matches, setMatches] = useState<Match[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [showGameStages, setShowGameStages] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [selectedStage, setSelectedStage] = useState<string>('');
   const { filters } = useFilter();
+  const { token } = useUserProfile()
   console.log("filters in matechs screen : ", filters)
+
+  // Api to get matches :
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const query = new URLSearchParams({
+          // category: filters.category || '',
+          age_min: filters.ageRange[0]?.toString() || '18',
+          age_max: filters.ageRange[1]?.toString() || '100',
+          city: filters.location || '', // assuming you renamed "country" to "city"
+        });
+
+        const response = await axios.get(`${API_BASE_URL}/user/matches?${query.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const formatted = response.data.matches.map((m: any) => ({
+          id: m.id,
+          name: m.name,
+          age: m.age,
+          image: m.profile_image ||
+            (m.i_am === 'Female'
+              ? 'https://img.freepik.com/free-psd/3d-rendering-hair-style-avatar-design_23-2151869123.jpg?semt=ais_hybrid&w=740'
+              : 'https://st.depositphotos.com/46542440/55685/i/450/depositphotos_556851336-stock-illustration-square-face-character-stiff-art.jpg'),
+
+          matchPercentage: Math.floor(Math.random() * 21) + 80, // temp random 80–100%
+          lastActive: 'Just now',
+          status: 'online',
+        }));
+
+        setMatches(formatted);
+      } catch (error) {
+        console.error('Error fetching matches:', error);
+      }
+    };
+
+    fetchMatches();
+  }, [filters]);
+
   const [gameResults, setGameResults] = useState<{
     answers: string[];
     shared: number;
@@ -81,7 +126,7 @@ export default function MatchesScreen() {
   const handleGameInvite = (match: Match) => {
     setSelectedMatch(match);
     setShowGameStages(true);
-    setSelectedStage('icebreakers'); // Set default stage
+    setSelectedStage('icebreakers');
     setGameStarted(true);
   };
 
@@ -91,8 +136,8 @@ export default function MatchesScreen() {
 
   const handleChat = (match: Match) => {
     router.push({
-      pathname: '/(tabs)/chats',
-      params: { matchId: match.id }
+      pathname: '/chat/[id]',
+      params: { id: match.id }
     });
   };
 
@@ -146,7 +191,9 @@ export default function MatchesScreen() {
               >
                 <View style={styles.matchCard}>
 
+
                   <Image source={{ uri: match.image }} style={styles.matchImage} />
+
                   <LinearGradient
                     colors={['transparent', 'rgba(0,0,0,0.8)']}
                     style={styles.gradient}
@@ -274,6 +321,7 @@ const styles = StyleSheet.create({
     height: '100%',
     position: 'absolute',
   },
+
   gradient: {
     position: 'absolute',
     bottom: 0,

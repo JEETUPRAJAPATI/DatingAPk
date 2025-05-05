@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
@@ -6,47 +6,91 @@ import { useUserProfile } from '../context/userContext';
 import { API_BASE_URL } from '../apiUrl';
 import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useInterests } from '../context/interestContext';
+import SelectInput from '@/components/SelectInput';
+import MultipleSelectInput from '@/components/MultiSelectInput';
+
+type Address = {
+  country: string;
+  state: string;
+  city: string;
+  pincode: string;
+  locality: string;
+};
 
 interface ProfileData {
-  fullName: string;
+  name: string;
   email: string;
-  bio: string;
-  interests: string;
-  hobbies: string;
-  height: string;
-  weight: string;
-  skinColor: string;
-  address: string;
-  age: string;
-  likes: string;
+  mobile: string;
+  i_am: string;
+  interested_in: string;
+  age: number | null;
+  about: string;
+  likes: string[];         // array of strings
+  interests: string[];     // array of strings
+  hobbies: string[];       // array of strings
+  skin_color: string;
+  height: number | null;
+  weight: number | null;
+  address: Address,
+  profession: string;
+  marital_status: string;
   category: string;
 }
 
 
+
 export default function ProfileScreen() {
   const { updateProfile, profile: contextProfile, token } = useUserProfile();
+  const [interests, setInterests] = useState([]);
+  useEffect(() => {
+    const fetchAndStoreInterests = async () => {
+      try {
+
+        const response = await fetch(`${API_BASE_URL}/interests`);
+        const data = await response.json();
+        console.log('Response:', data);
+        setInterests(data.interests || []);
+      } catch (error) {
+        console.error('Error fetching interests:', error);
+      }
+    };
+
+    fetchAndStoreInterests();
+  }, []);
 
   const [profile, setProfile] = useState<ProfileData>({
-    fullName: '',
+    name: '',
     email: '',
-    bio: '',
-    interests: '',
-    hobbies: '',
-    height: '',
-    weight: '',
-    skinColor: '',
-    address: '',
-    age: '',
-    likes: '',
+    mobile: '',
+    i_am: '',
+    interested_in: '',
+    age: null,
+    about: '',
+    likes: [],
+    interests: [],
+    hobbies: [],
+    skin_color: '',
+    height: null,
+    weight: null,
+    address: {
+      country: '',
+      state: '',
+      city: '',
+      pincode: '',
+      locality: '',
+    },
+    profession: '',
+    marital_status: '',
     category: '',
   });
 
 
   const isValid = () => {
     return (
-      profile.fullName.trim() !== '' &&
+      profile.name.trim() !== '' &&
       profile.email.trim() !== '' &&
-      profile.bio.trim() !== ''
+      profile.about.trim() !== ''
     );
   };
 
@@ -57,35 +101,68 @@ export default function ProfileScreen() {
     }));
   };
 
+  const handleAddressChange = (field: keyof Address, value: string) => {
+    setProfile((prevProfile) => ({
+      ...prevProfile,
+      address: {
+        ...prevProfile.address,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleInterestsChange = (selectedItems: any[]) => {
+    const idsOnly = selectedItems
+      .map(item => {
+        if (!item) return null;
+        if (typeof item === 'string') return item;
+        if (typeof item === 'object' && item.value) return item.value;
+        return null;
+      })
+      .filter(Boolean);
+
+    setProfile({ ...profile, interests: idsOnly });
+  };
+
+
+  // Function to handle comma separated array values for likes, interests, and hobbies
+  const handleArrayChange = (field: keyof ProfileData, value: string) => {
+    setProfile((prev) => ({
+      ...prev,
+      [field]: value.split(',').map((item) => item.trim()),
+    }));
+  };
+
+
+
   const handleContinue = async () => {
     if (isValid()) {
+      // Construct the cleaned profile object with the new structure
       const cleanedProfile = {
         // Context-based fields
-        fullname: profile.fullName.trim(),
+        name: profile.name.trim(),  // Changed 'fullname' to 'name' here
         email: profile.email.trim(),
         i_am: contextProfile.i_am || '',
-        interested_in: contextProfile.interested_in?.[0] || '',
+        interested_in: contextProfile.interested_in || '',
+        mobile: profile.mobile.trim(),
+        profession: profile.profession.trim(),  // Include profession here
+        marital_status: profile.marital_status.trim(),  // Include marital_status here
 
         // UI-based fields
-        about: profile.bio.trim(),
-        interests: profile.interests
-          ? profile.interests.split(',').map((i) => i.trim())
-          : [],
-        hobbies: profile.hobbies
-          ? profile.hobbies.split(',').map((h) => h.trim())
-          : [],
-        skin_color: profile.skinColor.trim(),
-        height: Number(profile.height) || 0,
-        weight: Number(profile.weight) || 0,
-        address: profile.address.trim(),
-        age: Number(profile.age) || 0,
-        likes: profile.likes
-          ? profile.likes.split(',').map((l) => l.trim())
-          : [],
-        category: profile.category.trim() || 'Friendship',
+        about: profile.about.trim(),
+        interests: profile.interests,  // Interests are already an array of ObjectIds
+        hobbies: profile.hobbies,      // Hobbies are already an array of strings
+        skin_color: profile.skin_color.trim(),
+        height: profile.height ?? 0,   // Use nullish coalescing for safety
+        weight: profile.weight ?? 0,   // Use nullish coalescing for safety
+        address: profile.address,      // Address is structured as an object
+        age: profile.age ?? 0,         // Default to 0 if null
+        likes: profile.likes,          // Likes are already an array of strings
+        category: profile.category.trim() || 'Friendship',  // Default to 'Friendship' if empty
       };
 
-      updateProfile(cleanedProfile); // optional: if needed globally
+      // Update the profile context
+      updateProfile(cleanedProfile);
 
       try {
         const res = await fetch(`${API_BASE_URL}/user/profile/setup`, {
@@ -94,12 +171,12 @@ export default function ProfileScreen() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(cleanedProfile),
+          body: JSON.stringify(cleanedProfile),  // Send the structured profile data
         });
 
         const data = await res.json();
 
-        console.log('🚀 API Response:', data);
+        console.log('Profile Setup API Response:', data);
 
         if (data.status) {
           Toast.show({
@@ -127,10 +204,9 @@ export default function ProfileScreen() {
           position: 'top',
         });
       }
-
-      console.log('✅ Final Payload Sent:', cleanedProfile);
     }
   };
+
 
 
   return (
@@ -144,15 +220,15 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
 
-        {/** Full Name */}
+        {/* Name */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Full Name*</Text>
           <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
             <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
               <TextInput
                 style={styles.input}
-                value={profile.fullName}
-                onChangeText={(text) => handleChange('fullName', text)}
+                value={profile.name}
+                onChangeText={(text) => handleChange('name', text)}
                 placeholderTextColor="#666"
                 placeholder="e.g. John Doe"
               />
@@ -160,7 +236,7 @@ export default function ProfileScreen() {
           </LinearGradient>
         </View>
 
-        {/** Email */}
+        {/* Email */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email*</Text>
           <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
@@ -178,15 +254,32 @@ export default function ProfileScreen() {
           </LinearGradient>
         </View>
 
-        {/** About You */}
+        {/* Mobile */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Mobile</Text>
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.mobile}
+                onChangeText={(text) => handleChange('mobile', text)}
+                keyboardType="phone-pad"
+                placeholderTextColor="#666"
+                placeholder="e.g. 9876543210"
+              />
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* About You */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>About You*</Text>
           <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
             <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
               <TextInput
                 style={[styles.input, styles.textArea]}
-                value={profile.bio}
-                onChangeText={(text) => handleChange('bio', text)}
+                value={profile.about}
+                onChangeText={(text) => handleChange('about', text)}
                 multiline
                 numberOfLines={4}
                 placeholderTextColor="#666"
@@ -196,156 +289,247 @@ export default function ProfileScreen() {
           </LinearGradient>
         </View>
 
-        {/** Interests */}
+        {/* Interests */}
+        <View>
+          <MultipleSelectInput
+            label="Interests"
+            value={profile.interests.map((i) => (typeof i === 'string' ? i : i._id))}
+            onValueChange={handleInterestsChange}
+            items={interests.map((interest) => ({
+              label: interest.name,
+              value: interest.id, // ✅ string
+            }))}
+            placeholder="Select Interests"
+          />
+        </View>
+
+        {/* Hobbies */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Interests</Text>
+          <Text style={styles.label}>Hobbies (comma separated)</Text>
           <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
             <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
               <TextInput
                 style={styles.input}
-                value={profile.interests}
-                onChangeText={(text) => handleChange('interests', text)}
+                value={profile.hobbies.join(', ')}
+                onChangeText={(text) => handleArrayChange('hobbies', text)}
                 placeholderTextColor="#666"
-                placeholder="e.g. abc"
+                placeholder="e.g. Swimming, Drawing"
               />
             </View>
           </LinearGradient>
         </View>
 
-        {/** Hobbies */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Hobbies</Text>
-          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
-            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
-              <TextInput
-                style={styles.input}
-                value={profile.hobbies}
-                onChangeText={(text) => handleChange('hobbies', text)}
-                placeholderTextColor="#666"
-                placeholder="e.g. abc"
-              />
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/** Height & Weight */}
+        {/* Height & Weight */}
         <View style={styles.row}>
           <View style={[styles.inputContainer, styles.halfWidth]}>
-            <Text style={styles.label}>Height</Text>
+            <Text style={styles.label}>Height (cm)</Text>
             <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
               <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
                 <TextInput
                   style={styles.input}
-                  value={profile.height}
-                  onChangeText={(text) => handleChange('height', text)}
+                  value={profile.height ? profile.height.toString() : ''}
+                  onChangeText={(text) => handleChange('height', Number(text))}
                   keyboardType="numeric"
                   placeholderTextColor="#666"
-                  placeholder="e.g. 180cm"
+                  placeholder="e.g. 180"
                 />
               </View>
             </LinearGradient>
           </View>
 
           <View style={[styles.inputContainer, styles.halfWidth]}>
-            <Text style={styles.label}>Weight</Text>
+            <Text style={styles.label}>Weight (kg)</Text>
             <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
               <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
                 <TextInput
                   style={styles.input}
-                  value={profile.weight}
-                  onChangeText={(text) => handleChange('weight', text)}
+                  value={profile.weight ? profile.weight.toString() : ''}
+                  onChangeText={(text) => handleChange('weight', Number(text))}
                   keyboardType="numeric"
                   placeholderTextColor="#666"
-                  placeholder="e.g. 66kg"
+                  placeholder="e.g. 70"
                 />
               </View>
             </LinearGradient>
           </View>
         </View>
 
-        {/** Skin Color */}
+        {/* Skin Color */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Skin Color</Text>
           <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
             <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
               <TextInput
                 style={styles.input}
-                value={profile.skinColor}
-                onChangeText={(text) => handleChange('skinColor', text)}
+                value={profile.skin_color}
+                onChangeText={(text) => handleChange('skin_color', text)}
                 placeholderTextColor="#666"
-                placeholder="e.g. white, brown, black"
+                placeholder="e.g. Fair, Brown"
               />
             </View>
           </LinearGradient>
         </View>
 
         {/** Age & Category */}
-        <View style={styles.row}>
-          <View style={[styles.inputContainer, styles.halfWidth]}>
-            <Text style={styles.label}>Age</Text>
-            <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
-              <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
-                <TextInput
-                  style={styles.input}
-                  value={profile.age}
-                  onChangeText={(text) => handleChange('age', text)}
-                  keyboardType="numeric"
-                  placeholderTextColor="#666"
-                  placeholder="e.g. 25"
-                />
-              </View>
-            </LinearGradient>
-          </View>
 
-          <View style={[styles.inputContainer, styles.halfWidth]}>
-            <Text style={styles.label}>Category</Text>
-            <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
-              <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
-                <TextInput
-                  style={styles.input}
-                  value={profile.category}
-                  onChangeText={(text) => handleChange('category', text)}
-                  placeholderTextColor="#666"
-                  placeholder="e.g. Friendship, Dating"
-                />
-              </View>
-            </LinearGradient>
-          </View>
-        </View>
-
-        {/** Likes */}
+        {/* Age */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Likes</Text>
+          <Text style={styles.label}>Age</Text>
           <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
             <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
               <TextInput
                 style={styles.input}
-                value={profile.likes}
-                onChangeText={(text) => handleChange('likes', text)}
-                placeholder="e.g. Gym, Travel, Music"
+                value={profile.age ? profile.age.toString() : ''}
+                onChangeText={(text) => handleChange('age', Number(text))}
+                keyboardType="numeric"
                 placeholderTextColor="#666"
+                placeholder="e.g. 25"
               />
             </View>
           </LinearGradient>
         </View>
 
-        {/** Address */}
+
+        {/* Marital Status */}
+        <View>
+          <SelectInput
+            label="Marital Status"
+            value={profile.marital_status}
+            onValueChange={(val) => setProfile({ ...profile, marital_status: val })}
+            items={[
+              { label: 'Married', value: 'married' },
+              { label: 'Unmarried', value: 'unmarried' },
+              { label: 'Widow', value: 'widow' }
+            ]}
+            placeholder="Select Marital Status"
+          />
+        </View>
+
+
+        {/* Profession */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Address</Text>
+          <Text style={styles.label}>Profession</Text>
           <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
             <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
               <TextInput
-                style={[styles.input, styles.textArea]}
-                value={profile.address}
-                onChangeText={(text) => handleChange('address', text)}
-                multiline
-                numberOfLines={3}
+                style={styles.input}
+                value={profile.profession}
+                onChangeText={(text) => handleChange('profession', text)}
                 placeholderTextColor="#666"
-                placeholder='e.g. 123 Main St, City, Country'
+                placeholder="e.g. Software Engineer"
               />
             </View>
           </LinearGradient>
         </View>
+
+        {/* Category */}
+        <View>
+          <SelectInput
+            label="Category"
+            value={profile.category}
+            onValueChange={(val) => setProfile({ ...profile, category: val })}
+            items={[
+              { label: 'Casual Dating', value: 'Casual Dating' },
+              { label: 'Serious Relationship', value: 'Serious Relationship' },
+              { label: 'Friendship', value: 'Friendship' }
+            ]}
+            placeholder="Select Category"
+          />
+        </View>
+
+        {/* Likes */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Likes (comma separated)</Text>
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.likes.join(', ')}
+                onChangeText={(text) => handleArrayChange('likes', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. Gym, Music"
+              />
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Address Fields */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Country</Text>
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.address.country}
+                onChangeText={(text) => handleAddressChange('country', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. India, USA"
+              />
+            </View>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>State</Text>
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.address.state}
+                onChangeText={(text) => handleAddressChange('state', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. Maharashtra, California"
+              />
+            </View>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>City</Text>
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.address.city}
+                onChangeText={(text) => handleAddressChange('city', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. Mumbai, Los Angeles"
+              />
+            </View>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Locality</Text>
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.address.locality}
+                onChangeText={(text) => handleAddressChange('locality', text)}
+                placeholderTextColor="#666"
+                placeholder="e.g. Downtown, Andheri East"
+              />
+            </View>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Pincode</Text>
+          <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.inputGradient}>
+            <View style={{ backgroundColor: '#000', borderRadius: 10 }}>
+              <TextInput
+                style={styles.input}
+                value={profile.address.pincode}
+                onChangeText={(text) => handleAddressChange('pincode', text)}
+                keyboardType="numeric"
+                placeholderTextColor="#666"
+                placeholder="e.g. 400001, 90001"
+              />
+            </View>
+          </LinearGradient>
+        </View>
+
 
         <Pressable
           onPress={handleContinue}

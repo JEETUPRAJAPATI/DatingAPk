@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, Star } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { API_BASE_URL } from '../apiUrl';
 import { useUserProfile } from '../context/userContext';
@@ -16,7 +17,7 @@ export default function RateScreen() {
     if (!selectedRating) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/rate`, {
+      const res = await fetch(`${API_BASE_URL}/profile/rate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,22 +88,63 @@ export default function RateScreen() {
             : 'Tap a star to rate'}
         </Text>
 
-        <TextInput
-          style={styles.feedbackInput}
-          placeholder="Write your feedback here..."
-          placeholderTextColor="#999"
-          multiline
-          value={feedback}
-          onChangeText={setFeedback}
-        />
+        {/* Gradient Feedback Input */}
+        <LinearGradient colors={['#FF00FF', '#8000FF']} style={styles.gradientBorder}>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.feedbackInput}
+              placeholder="Write your feedback here..."
+              placeholderTextColor="#999"
+              multiline
+              value={feedback}
+              onChangeText={setFeedback}
+            />
+          </View>
+        </LinearGradient>
 
-        <Pressable
-          style={[styles.submitButton, !selectedRating && styles.submitButtonDisabled]}
-          onPress={handleSubmitRating}
-          disabled={!selectedRating}
+        {/* Gradient Submit Button */}
+        <LinearGradient
+          colors={['#FF00FF', '#8000FF']}
+          style={[
+            styles.submitButtonGradient,
+            !selectedRating && styles.submitButtonDisabled,
+          ]}
         >
-          <Text style={styles.submitButtonText}>Submit Rating</Text>
-        </Pressable>
+          <Pressable
+            onPress={handleSubmitRating}
+            disabled={!selectedRating}
+            style={{
+              width: '100%',
+              opacity: !selectedRating ? 0.5 : 1,
+            }}
+          >
+            <LinearGradient
+              colors={['#FF00FF', '#D000FF', '#8000FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                height: 48,
+                borderRadius: 24,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#FF00FF',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.5,
+                shadowRadius: 10,
+                elevation: 5,
+              }}
+            >
+              <Text style={{
+                fontFamily: 'Rajdhani-SemiBold',
+                fontSize: 18,
+                color: '#000000', // Optional: Use '#FFFFFF' if inner background is dark
+              }}>
+                Submit Rating
+              </Text>
+            </LinearGradient>
+          </Pressable>
+
+        </LinearGradient>
       </View>
     </View>
   );
@@ -160,17 +202,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   feedbackInput: {
-    width: '100%',
     minHeight: 100,
-    borderColor: '#FF00FF',
-    borderWidth: 1,
     borderRadius: 12,
     padding: 12,
     color: '#fff',
     fontFamily: 'Rajdhani',
     fontSize: 16,
-    marginBottom: 24,
-    backgroundColor: '#1a1a1a',
   },
 
   submitButton: {
@@ -186,6 +223,33 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
-    color: '#000000',
+    color: '#FFFFFF', // Changed from black to white
   },
+
+  gradientBorder: {
+    borderRadius: 14,
+    padding: 2,
+    width: '100%',
+    marginBottom: 24,
+  },
+
+  inputWrapper: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+  },
+
+
+  submitButtonGradient: {
+    borderRadius: 20,
+    padding: 2,
+    width: '100%',
+  },
+
+  pressableInsideGradient: {
+    borderRadius: 18,
+    backgroundColor: '#000',
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+
 });

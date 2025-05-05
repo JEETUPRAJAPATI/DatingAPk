@@ -2,11 +2,29 @@ import { View, Text, StyleSheet, Pressable, ImageBackground, Image } from 'react
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Heart } from 'lucide-react-native';
+import { useUserProfile } from './context/userContext';
+import { useEffect } from 'react';
+
 
 export default function IntroScreen() {
+
+  const { token, loading } = useUserProfile();
+  console.log('Token in index page:', token); // Debugging line to check the token value
+  useEffect(() => {
+
+    if (token) {
+      router.push('/(tabs)');
+    }
+  }, [token]);
+
+  if (loading) {
+    return null;
+  }
+
   return (
     <ImageBackground
       source={{ uri: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop' }}
+      // source={{ uri: 'https://i.pinimg.com/originals/03/c9/54/03c9541719602686ffd2f495097f37d8.gif' }}
       style={styles.container}
     >
       <LinearGradient
@@ -117,8 +135,8 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#FF00FF',
-    shadowColor: '#FF00FF',
+    borderColor: '#03d7fc',
+    shadowColor: '#03d7fc',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 10,
@@ -135,7 +153,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
-    color: '#FF00FF',
+    color: '#03d7fc',
   },
   signupButtonText: {
     color: '#000000',

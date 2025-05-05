@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import { useUserProfile } from '../context/userContext';
 import { LinearGradient } from 'expo-linear-gradient';
 
-type Preference = 'man' | 'woman' | 'other';
+type Preference = 'Male' | 'Female' | 'Both';
 
 export default function LookingForScreen() {
   const [selectedPreferences, setSelectedPreferences] = useState<Set<Preference>>(new Set());
@@ -24,11 +24,20 @@ export default function LookingForScreen() {
 
   const handleContinue = () => {
     if (selectedPreferences.size > 0) {
-      const preferencesArray = Array.from(selectedPreferences);
-      updateProfile({ interested_in: preferencesArray }); // 👈 Update context
+      let valueToSave = '';
+      const prefs = Array.from(selectedPreferences);
+
+      if (prefs.includes('Male') && prefs.includes('Female')) {
+        valueToSave = 'Both';
+      } else if (prefs.length === 1) {
+        valueToSave = prefs[0];
+      }
+
+      updateProfile({ interested_in: valueToSave });
       router.push('/auth/profile');
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -41,7 +50,7 @@ export default function LookingForScreen() {
         <Text style={styles.subtitle}>Select all that apply</Text>
 
         <View style={styles.optionsContainer}>
-          {(['man', 'woman', 'other'] as Preference[]).map((preference) => (
+          {(['Male', 'Female', 'Both'] as Preference[]).map((preference) => (
             <Pressable
               key={preference}
               style={[
@@ -139,15 +148,15 @@ const styles = StyleSheet.create({
   option: {
     height: 56,
     borderWidth: 2,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
   optionSelected: {
-    backgroundColor: '#FF00FF',
-    shadowColor: '#FF00FF',
+    backgroundColor: '#03d7fc',
+    shadowColor: '#03d7fc',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 10,
@@ -156,7 +165,7 @@ const styles = StyleSheet.create({
   optionText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 18,
-    color: '#FF00FF',
+    color: '#03d7fc',
   },
   optionTextSelected: {
     color: '#000',

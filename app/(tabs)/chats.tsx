@@ -1,84 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable, ScrollView, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { Search, Video, MessageSquare, Plus } from 'lucide-react-native';
-import StoryViewer from '@/components/StoryViewer';
-import StoryUploader from '@/components/StoryUploader';
 
-interface User {
-  id: string;
-  name: string;
-  image: string;
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  online: boolean;
-  typing?: boolean;
-  stories?: Array<{
-    id: string;
-    imageUrl: string;
-    timestamp: string;
-  }>;
-}
+import StoryList from '@/components/StoryLists';
+import { API_BASE_URL } from '../apiUrl';
+import { useUserProfile } from '../context/userContext';
 
-const users: User[] = [
-  {
-    id: '1',
-    name: 'Emma',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-    lastMessage: 'typing...',
-    timestamp: '2m ago',
-    unread: 2,
-    online: true,
-    typing: true,
-    stories: [
-      {
-        id: '1',
-        imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-        timestamp: '2h ago'
-      },
-      {
-        id: '2',
-        imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
-        timestamp: '1h ago'
-      }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Sarah',
-    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-    lastMessage: 'That sounds amazing! 😊',
-    timestamp: '1h ago',
-    unread: 0,
-    online: true,
-    stories: [
-      {
-        id: '1',
-        imageUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-        timestamp: '30m ago'
-      }
-    ]
-  },
-  {
-    id: '3',
-    name: 'Jessica',
-    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop',
-    lastMessage: 'Looking forward to our d...',
-    timestamp: '2h ago',
-    unread: 1,
-    online: false
-  }
-];
 
 export default function ChatsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStories, setSelectedStories] = useState<User['stories']>([]);
-  const [storyViewerVisible, setStoryViewerVisible] = useState(false);
-  const [storyUploaderVisible, setStoryUploaderVisible] = useState(false);
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const { token } = useUserProfile()
+  const [users, setUsers] = useState<User[]>([]);
 
-  const filteredUsers = users.filter(user =>
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        // Replace this with your actual API call
+        const response = await fetch(`${API_BASE_URL}/chat/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+
+        });
+        const data = await response.json();
+        console.log("chat users response : ", data)
+        setUsers(data.users);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      }
+    };
+
+    fetchUsers();
+  }, [token]);
+
+
+  const filteredUsers = users?.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -89,19 +46,6 @@ export default function ChatsScreen() {
     });
   };
 
-  const handleStoryPress = (user: User) => {
-    if (user.stories && user.stories.length > 0) {
-      setSelectedStories(user.stories);
-      setCurrentStoryIndex(0);
-      setStoryViewerVisible(true);
-    }
-  };
-
-  const handleStoryUpload = (imageUri: string) => {
-    // Here you would typically upload the image to your backend
-    console.log('Uploading story:', imageUri);
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -109,58 +53,43 @@ export default function ChatsScreen() {
         <Text style={styles.subtitle}>Your conversations</Text>
       </View>
 
-      <View style={styles.storiesWrapper}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesContainer}>
-          <Pressable
-            style={styles.addStoryButton}
-            onPress={() => setStoryUploaderVisible(true)}
-          >
-            <Text style={styles.addStoryPlus}>+</Text>
-            <Text style={styles.addStoryText}>Add Story</Text>
-          </Pressable>
-
-          {users.map(user => (
-            <Pressable
-              key={user.id}
-              style={styles.storyItem}
-              onPress={() => handleStoryPress(user)}
-            >
-              <Image source={{ uri: user.image }} style={styles.storyImage} />
-              {user.stories && user.stories.length > 0 && (
-                <View style={styles.storyIndicator} />
-              )}
-            </Pressable>
-          ))}
-        </ScrollView>
-      </View>
+      <StoryList />
 
       <View style={styles.searchContainer}>
-        <Search size={20} color="#FF00FF" />
+        <Search size={20} color="#03d7fc" />
         <TextInput
           style={styles.searchInput}
           placeholder="Search messages..."
-          placeholderTextColor="#666"
+          placeholderTextColor="#03d7fc"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
       <ScrollView style={styles.userList}>
-        {filteredUsers.map(user => (
+        {filteredUsers?.map(user => (
           <Pressable
             key={user.id}
             style={styles.userItem}
             onPress={() => handleUserPress(user.id)}
           >
             <View style={styles.avatarContainer}>
-              <Image source={{ uri: user.image }} style={styles.avatar} />
-              {user.online && <View style={styles.onlineIndicator} />}
+              {user.profile ? (
+                <Image source={{ uri: user.profile }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarFallback}>
+                  <Text style={styles.avatarText}>
+                    {user.name ? user.name.charAt(0).toUpperCase() : "?"}
+                  </Text>
+                </View>
+              )}
+              {user.online_status === "online" && <View style={styles.onlineIndicator} />}
             </View>
 
             <View style={styles.userInfo}>
               <View style={styles.nameRow}>
                 <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.timestamp}>{user.timestamp}</Text>
+                <Text style={styles.timestamp}>{new Date(user?.timestamp).toLocaleString()}</Text>
               </View>
 
               <View style={styles.messageRow}>
@@ -168,15 +97,15 @@ export default function ChatsScreen() {
                   style={[
                     styles.lastMessage,
                     user.typing && styles.typingMessage,
-                    user.unread > 0 && styles.unreadMessage
+                    user.unread_count > 0 && styles.unreadMessage
                   ]}
                   numberOfLines={1}
                 >
-                  {user.lastMessage}
+                  {user.last_message}
                 </Text>
-                {user.unread > 0 && (
+                {user.unread_count > 0 && (
                   <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadCount}>{user.unread}</Text>
+                    <Text style={styles.unreadCount}>{user.unread_count}</Text>
                   </View>
                 )}
               </View>
@@ -186,7 +115,12 @@ export default function ChatsScreen() {
               <Pressable style={styles.actionButton}>
                 <Video size={20} color="#FF00FF" />
               </Pressable>
-              <Pressable style={styles.actionButton}>
+              <Pressable style={styles.actionButton} onPress={() => {
+                router.push({
+                  pathname: '/chat/[id]',
+                  params: { id: user.id }
+                });
+              }}>
                 <MessageSquare size={20} color="#FF00FF" />
               </Pressable>
             </View>
@@ -194,20 +128,6 @@ export default function ChatsScreen() {
         ))}
       </ScrollView>
 
-      {selectedStories && (
-        <StoryViewer
-          visible={storyViewerVisible}
-          onClose={() => setStoryViewerVisible(false)}
-          stories={selectedStories}
-          currentIndex={currentStoryIndex}
-        />
-      )}
-
-      <StoryUploader
-        visible={storyUploaderVisible}
-        onClose={() => setStoryUploaderVisible(false)}
-        onUpload={handleStoryUpload}
-      />
     </View>
   );
 }
@@ -236,49 +156,7 @@ const styles = StyleSheet.create({
     color: '#00FFFF',
     marginTop: 4,
   },
-  storiesWrapper: {
-    height: 100,
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  storiesContainer: {
-    alignItems: 'center',
-  },
-  addStoryButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
-    borderWidth: 2,
-    borderColor: '#FF00FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  addStoryPlus: {
-    fontFamily: 'Rajdhani-Bold',
-    fontSize: 24,
-    color: '#FF00FF',
-  },
-  addStoryText: {
-    fontFamily: 'Rajdhani',
-    fontSize: 12,
-    color: '#FF00FF',
-    marginTop: 4,
-  },
-  storyItem: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: '#FF00FF',
-    overflow: 'hidden',
-  },
-  storyImage: {
-    width: '100%',
-    height: '100%',
-  },
+
   storyIndicator: {
     position: 'absolute',
     top: -2,
@@ -292,13 +170,13 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderRadius: 20,
     marginHorizontal: 20,
     paddingHorizontal: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   searchInput: {
     flex: 1,
@@ -315,7 +193,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#FF00FF',
+    borderBottomColor: '#03d7fc',
   },
   avatarContainer: {
     position: 'relative',
@@ -326,6 +204,20 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     borderWidth: 2,
     borderColor: '#FF00FF',
+  },
+  avatarFallback: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#FF00FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 24,
+    color: '#fff', // Text color for the initial
+    fontWeight: 'bold',
   },
   onlineIndicator: {
     position: 'absolute',

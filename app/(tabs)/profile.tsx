@@ -7,102 +7,72 @@ import { useUserProfile } from '../context/userContext';
 import { API_BASE_URL } from '../apiUrl';
 
 interface Plan {
-  id: string;
+  _id: string;
   name: string;
   price: number;
-  interval: 'month' | 'year';
+  duration_days: number;
   features: string[];
-  popular?: boolean;
+  isPopular: boolean;
 }
-
-const dummyPlans: Plan[] = [
-  {
-    id: 'monthly',
-    name: 'Premium',
-    price: 14.99,
-    interval: 'month',
-    features: [
-      'Unlimited Sparks',
-      'See who likes you',
-      'Priority matching',
-      'Rewind last swipe',
-      'Remove ads',
-    ],
-  },
-  {
-    id: 'yearly',
-    name: 'Premium Plus',
-    price: 99.99,
-    interval: 'year',
-    features: [
-      'All Premium features',
-      'Boosted visibility',
-      'Premium badge',
-      'Advanced filters',
-      'Priority support',
-    ],
-    popular: true,
-  },
-];
-
-const dummyInterests = ['Travel', 'Photography', 'Cooking', 'Yoga', 'Music'];
 
 
 export default function ProfileScreen() {
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const { user, setUser, token } = useUserProfile()
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [interests, setInterests] = useState<string[]>([])
-  const { user, token } = useUserProfile()
-  console.log("user profile:", user, token)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [plansRes, interestsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/subscriptions/plans`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch(`${API_BASE_URL}/interests`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-        ]);
 
-        if (!plansRes.ok || !interestsRes.ok) {
-          throw new Error('Failed to fetch data from one or both endpoints');
-        }
+  const [loading, setLoading] = useState(true);
 
-        const plansData = await plansRes.json();
-        const interestsData = await interestsRes.json();
-
-        console.log('Plans response:', plansData);
-        console.log('Interests response:', interestsData);
-
-        if (plansData.status === true && plansData.plans?.length > 0) {
-          setPlans(plansData.plans);
-        } else {
-          setPlans(dummyPlans); // Assuming `dummyPlans` is defined elsewhere
-        }
-
-        if (interestsData.status === true && Array.isArray(interestsData.interests)) {
-          setInterests(interestsData.interests);
-        }
-
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    if (token) {
-      fetchData();
-    }
-  }, [token]);
+  console.log("user in profile tab:", user, token)
 
   const handleEditProfile = () => {
     router.push('/profile/edit');
   };
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchAllData = async () => {
+      try {
+        const [plansRes, userRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/subscriptions/plans`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_BASE_URL}/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const [plansData, userData] = await Promise.all([
+          plansRes.json(),
+          userRes.json(),
+        ]);
+
+        // Plans
+        if (plansData?.status && Array.isArray(plansData.plans)) {
+          setPlans(plansData.plans);
+        } else {
+          setPlans([]);
+        }
+
+        // User
+        console.log("user data res  : ", userData)
+        if (userData?.status && userData.profile) {
+          setUser(userData.profile); // assuming `setUser` comes from context or state
+        }
+
+      } catch (err) {
+        console.error('Error fetching profile data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [token]);
+
+
+
   // Update the handleUpgrade function in the ProfileScreen component
   interface Plan {
     name: string;
@@ -131,49 +101,64 @@ export default function ProfileScreen() {
           <Text style={styles.upgradeTitle}>Upgrade to Premium</Text>
         </View>
 
-        <ScrollView style={styles.plansContainer}>
-          {plans.map((plan) => (
-            <View
-              key={plan.id}
-              style={[
-                styles.planCard,
-                plan.popular && styles.popularPlan,
-              ]}
-            >
-              {plan.popular && (
-                <View style={styles.popularBadge}>
-                  <Text style={styles.popularText}>Most Popular</Text>
-                </View>
-              )}
-
-              <View style={styles.planHeader}>
-                <Crown size={32} color="#FF00FF" />
-                <Text style={styles.planName}>{plan.name}</Text>
-                <View style={styles.priceContainer}>
-                  <Text style={styles.currency}>$</Text>
-                  <Text style={styles.price}>{plan.price}</Text>
-                  <Text style={styles.interval}>/{plan.interval}</Text>
-                </View>
-              </View>
-
-              <View style={styles.featuresContainer}>
-                {plan.features.map((feature, index) => (
-                  <View key={index} style={styles.featureItem}>
-                    <Text style={styles.featureText}>• {feature}</Text>
-                  </View>
-                ))}
-              </View>
-
-              <Pressable style={styles.upgradeButton}
-                onPress={() => handleUpgrade({ name: 'Premium', price: 9.99 })}
+        {loading ? (
+          <Text style={styles.loadingText}>Loading plans...</Text>
+        ) : plans.length === 0 ? (
+          <Text style={styles.noPlansText}>No subscription plans available.</Text>
+        ) : (
+          <ScrollView style={styles.plansContainer}>
+            {plans.map((plan) => (
+              <View
+                key={plan._id}
+                style={[
+                  styles.planCard,
+                  plan.isPopular && styles.popularPlan,
+                ]}
               >
-                <Text style={styles.upgradeButtonText}>
-                  Choose {plan.name}
-                </Text>
-              </Pressable>
-            </View>
-          ))}
-        </ScrollView>
+                {plan.isPopular && (
+                  <View style={styles.popularBadge}>
+                    <Text style={styles.popularText}>Most Popular</Text>
+                  </View>
+                )}
+
+                <View style={styles.planHeader}>
+                  <Crown size={32} color="#FF00FF" />
+                  <Text style={styles.planName}>{plan.name}</Text>
+                  <View style={styles.priceContainer}>
+                    <Text style={styles.currency}>$</Text>
+                    <Text style={styles.price}>{plan.price}</Text>
+                    <Text style={styles.interval}>
+                      /{plan.duration_days === 30 ? 'month' : `${plan.duration_days} days`}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.featuresContainer}>
+                  {plan.features?.map((feature, index) => (
+                    <View key={index} style={styles.featureItem}>
+                      <Text style={styles.featureText}>• {feature}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <LinearGradient
+                  colors={['#FF00FF', '#D000FF', '#8000FF']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.upgradeButtonGradient}
+                >
+                  <Pressable
+                    onPress={() => handleUpgrade({ name: plan.name, price: plan.price })}
+                  >
+                    <Text style={styles.upgradeButtonText}>
+                      Choose {plan.name}
+                    </Text>
+                  </Pressable>
+                </LinearGradient>
+              </View>
+            ))}
+          </ScrollView>
+        )}
       </View>
     );
   }
@@ -199,20 +184,20 @@ export default function ProfileScreen() {
               style={styles.avatar}
             />
             <Pressable style={styles.cameraButton}>
-              <Camera size={20} color="#FF00FF" />
+              <Camera size={20} color="#03d7fc" />
             </Pressable>
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>Jessica Parker</Text>
-            <Text style={styles.location}>New York, NY</Text>
+            <Text style={styles.name}>{user?.fullname || 'Jessica Parker'}</Text>
+            <Text style={styles.location}>{user?.address?.country || "New York, NY"}</Text>
           </View>
 
           <Pressable
             style={styles.editButton}
             onPress={handleEditProfile}
           >
-            <Edit3 size={20} color="#FF00FF" />
+            <Edit3 size={20} color="#03d7fc" />
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </Pressable>
         </View>
@@ -237,20 +222,25 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About Me</Text>
           <Text style={styles.bioText}>
-            Adventure seeker and coffee enthusiast. Love exploring new places and meeting interesting people. Always up for spontaneous trips and trying new experiences! 🌎✈️
+            {user?.about || "Adventure seeker and coffee enthusiast. Love exploring new places and meeting interesting people. Always up for spontaneous trips and trying new experiences! 🌎✈️"}
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Interests</Text>
           <View style={styles.interestsContainer}>
-            {(interests.length > 0 ? interests : dummyInterests).map((interest, index) => (
-              <View key={index} style={styles.interestTag}>
-                <Text style={styles.interestText}>{interest}</Text>
-              </View>
-            ))}
+            {user?.interests?.length > 0 ? (
+              user?.interests?.map((interest, index) => (
+                <View key={index} style={styles.interestTag}>
+                  <Text style={styles.interestText}>{interest.name}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noPlansText}>No interests added yet.</Text>
+            )}
           </View>
         </View>
+
 
         <Pressable
           style={styles.upgradeCard}
@@ -265,7 +255,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </View>
-          <ChevronRight size={24} color="#FF00FF" />
+          <ChevronRight size={24} color="#03d7fc" />
         </Pressable>
 
         <Pressable
@@ -274,7 +264,7 @@ export default function ProfileScreen() {
         >
           <Settings size={24} color="#FF00FF" />
           <Text style={styles.settingsText}>Settings</Text>
-          <ChevronRight size={24} color="#FF00FF" />
+          <ChevronRight size={24} color="#03d7fc" />
         </Pressable>
       </ScrollView>
     </View>
@@ -317,7 +307,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   cameraButton: {
     position: 'absolute',
@@ -328,7 +318,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: '#000',
     borderWidth: 2,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -350,9 +340,9 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -362,7 +352,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 16,
-    color: '#FF00FF',
+    color: '#03d7fc',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -371,9 +361,9 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     marginHorizontal: 20,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   statItem: {
     alignItems: 'center',
@@ -381,7 +371,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: 'Orbitron-Bold',
     fontSize: 24,
-    color: '#FF00FF',
+    color: '#03d7fc',
     marginBottom: 4,
   },
   statLabel: {
@@ -392,7 +382,8 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: 'rgba(255, 0, 255, 0.2)',
+    backgroundColor: '#03d7fc',
+    opacity: 0.5,
   },
   section: {
     padding: 20,
@@ -415,9 +406,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   interestTag: {
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 16,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -425,14 +416,14 @@ const styles = StyleSheet.create({
   interestText: {
     fontFamily: 'Rajdhani',
     fontSize: 14,
-    color: '#FF00FF',
+    color: '#03d7fc',
   },
   upgradeCard: {
     margin: 20,
     padding: 20,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderWidth: 2,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -460,9 +451,9 @@ const styles = StyleSheet.create({
   settingsButton: {
     margin: 20,
     padding: 20,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -492,9 +483,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   planCard: {
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(255, 0, 255, 0.1)',
     borderWidth: 2,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 20,
     padding: 24,
     marginBottom: 20,
@@ -559,15 +550,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFF',
   },
+  upgradeButtonGradient: {
+    backgroundColor: 'rgba(255, 0, 255, 0.2)', // Soft color fallback
+    borderWidth: 1,  // Border for button visibility
+    borderColor: '#FF00FF', // Border color to match the gradient
+    borderRadius: 20,  // Rounded corners
+    paddingVertical: 14, // Vertical padding
+    paddingHorizontal: 32, // Horizontal padding to give more space
+    alignItems: 'center', // Center the button content horizontally
+    justifyContent: 'center', // Center the button content vertically
+    width: '100%',  // Ensures the gradient fills the entire button width
+    marginTop: 16, // Add some space from elements above
+    marginBottom: 16, // Add some space below the button
+  },
+
   upgradeButton: {
-    backgroundColor: '#FF00FF',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
+    backgroundColor: '#FF00FF', // Fallback color for the button
+    borderRadius: 20, // Round corners
+    paddingVertical: 14, // Vertical padding for better clickability
+    paddingHorizontal: 32, // Horizontal padding for more space for the text
+    justifyContent: 'center', // Centers text vertically
+    alignItems: 'center', // Centers text horizontally
+    width: '100%', // Ensures the button takes full width of the gradient
+    shadowColor: '#000', // Shadow effect for depth
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
+
   upgradeButtonText: {
-    fontFamily: 'Rajdhani-SemiBold',
-    fontSize: 18,
-    color: '#000',
-  },
+    fontFamily: 'Rajdhani-SemiBold',  // Bold text for emphasis
+    fontSize: 18,  // Text size
+    color: '#000',  // Text color (dark text for visibility)
+    fontWeight: 'bold', // Make text bold
+    textAlign: 'center',  // Center the text inside the button
+  }
+
+
 });

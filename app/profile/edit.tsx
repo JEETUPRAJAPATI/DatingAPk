@@ -7,134 +7,192 @@ import { API_BASE_URL } from '../apiUrl';
 import { useUserProfile } from '../context/userContext';
 import Toast from 'react-native-toast-message';
 import GradientInput from '@/components/GradientInput';
-
+import SelectInput from '@/components/SelectInput';
+import MultipleSelectInput from '@/components/MultiSelectInput';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 export default function EditProfileScreen() {
-  const { token } = useUserProfile()
+  const { token, user, setUser } = useUserProfile();
 
-  const [profile, setProfile] = useState({
-    name: 'Sample User',
-    email: 'sampleuser@gmail.com',
-    phone: '+91 9512345678',
-    gender: 'Female',
-    genderPreference: 'Female',
-    age: '25',
-    birthdate: '1998-04-12',
-    height: 170,
-    weight: 65,
-    skin_color: 'Fair',
-    address: '123 Main St, New York, NY',
-    category: 'Friendship',
-    about: 'Adventurer and dreamer',
-    likes: ['Movies', 'Travel'],
-    interests: ['Photography', 'Cooking'],
-    hobbies: ['Reading', 'Dancing'],
-    location: 'South Mumbai',
-  });
-
+  const [interests, setInterests] = useState([]);
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchAndStoreInterests = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/profile`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
 
-        const data = await res.json();
-        console.log('👤 Profile fetched:', data);
-
-        if (res.ok && data.status && data.fullname) {
-          setProfile({
-            name: data.user.fullname || '',
-            email: data.user.email || '',
-            phone: data.user.phone || '',
-            gender: data.user.gender || '',
-            genderPreference: data.user.genderPreference || '',
-            age: data.user.age?.toString() || '',
-            birthdate: data.user.birthdate || '',
-            height: data.user.height || 0,
-            weight: data.user.weight || 0,
-            skin_color: data.user.skin_color || '',
-            address: data.user.address || '',
-            category: data.user.category || '',
-            about: data.user.about || '',
-            likes: data.user.likes || [],
-            interests: data.user.interests || [],
-            hobbies: data.user.hobbies || [],
-            location: data.user.location || '',
-          });
-        }
+        const response = await fetch(`${API_BASE_URL}/interests`);
+        const data = await response.json();
+        console.log('Response:', data);
+        setInterests(data.interests || []);
       } catch (error) {
-        console.error('Profile fetch error:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Network Error',
-          text2: 'Please try again later.',
-          position: 'top',
-        });
+        console.error('Error fetching interests:', error);
       }
     };
 
-    if (token) {
-      fetchProfile();
+    fetchAndStoreInterests();
+  }, []);
+
+
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    about: '',
+    age: '',
+    gender: '',
+    genderPreference: '',
+    profession: '',
+    marital_status: '',
+
+    height: '',
+    weight: '',
+    skin_color: '',
+    category: '',
+    likes: [],
+    interests: [],
+    hobbies: [],
+    address: {
+      country: '',
+      state: '',
+      city: '',
+      pincode: '',
+      locality: '',
+    },
+    profileImage: '',
+  });
+
+  console.log("profile update formdta : ", profile)
+
+  // Load user profile data if available
+  useEffect(() => {
+    if (user) {
+      setProfile({
+        name: user.fullname || '',
+        email: user.email || '',
+        phone: user.mobile || '',
+        about: user.about || '',
+        age: user.age ? String(user.age) : '',
+        gender: user.gender || '',
+        genderPreference: user.genderPreference || '',
+        profession: user.profession || '',
+        marital_status: user.marital_status || '',
+        height: user.height ? String(user.height) : '',
+        weight: user.weight ? String(user.weight) : '',
+        skin_color: user.skin_color || '',
+        category: user.category || '',
+        likes: user.likes || [],
+        interests: user.interests || [],
+        hobbies: user.hobbies || [],
+        address: {
+          country: user.address?.country || '',
+          state: user.address?.state || '',
+          city: user.address?.city || '',
+          pincode: user.address?.pincode || '',
+          locality: user.address?.locality || '',
+        },
+        profileImage: user.profile_image || '',
+      });
     }
-  }, [token]);
+  }, [user]);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setProfile({ ...profile, profileImage: result.assets[0].uri });
+    }
+  };
+
 
   const handleUpdateProfile = async () => {
     try {
+      const formData = new FormData();
+
+      formData.append('name', profile.name);
+      formData.append('email', profile.email);
+      formData.append('mobile', profile.phone);
+      formData.append('i_am', profile.gender);
+      formData.append('interested_in', profile.genderPreference);
+      formData.append('age', profile.age);
+      formData.append('about', profile.about);
+      formData.append("likes", JSON.stringify(profile.likes));
+      formData.append("interests", JSON.stringify(profile.interests));
+      formData.append("hobbies", JSON.stringify(profile.hobbies));
+      formData.append('skin_color', profile.skin_color);
+      formData.append('height', profile.height);
+      formData.append('weight', profile.weight);
+      formData.append('profession', profile.profession);
+      formData.append('marital_status', profile.marital_status);
+      formData.append('category', profile.category);
+      formData.append('address', JSON.stringify(profile.address));
+
+      // Attach profile image if present and is a local file
+      const fileUri = profile.profileImage;
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+
+      if (fileInfo.exists) {
+        formData.append('profile_image', {
+          uri: fileInfo.uri,
+          name: `profile.jpg`, // hardcoded or from mime
+          type: 'image/jpeg',
+        });
+      }
+
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ':', pair[1]);
+      }
+
       const response = await fetch(`${API_BASE_URL}/user/profile/update`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Make sure `token` is available in your scope
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          fullname: profile.name,
-          about: profile.about,
-          email: profile.email,
-          birthdate: profile.birthdate,
-          genderPreference: profile.genderPreference,
-          height: profile.height,
-          weight: profile.weight,
-          skin_color: profile.skin_color,
-          address: profile.address,
-          category: profile.category,
-          likes: profile.likes,
-          interests: profile.interests,
-          hobbies: profile.hobbies,
-        }),
+        body: formData,
       });
 
       const data = await response.json();
-      console.log('🚀 API Response:', data);
 
       if (response.ok && data.status) {
         Toast.show({
           type: 'success',
           text1: 'Profile Updated',
-          text2: 'Your profile has been updated successfully!',
-          position: 'top',
         });
-
+        setUser(data.data);
         router.back();
       } else {
         Toast.show({
           type: 'error',
           text1: 'Update Failed',
-          text2: data.message || 'Something went wrong.',
-          position: 'top',
+          text2: data.message || 'Something went wrong',
         });
       }
-    } catch (error) {
-      console.error('Update error:', error);
+    } catch (err) {
+      console.error('Update Error:', err);
       Toast.show({
         type: 'error',
         text1: 'Network Error',
-        text2: 'Please try again later.',
-        position: 'top',
+        text2: 'Try again later',
       });
     }
+  };
+
+
+
+  const handleInterestsChange = (selectedItems: any[]) => {
+    const idsOnly = selectedItems
+      .map(item => {
+        if (!item) return null;
+        if (typeof item === 'string') return item;
+        if (typeof item === 'object' && item.value) return item.value;
+        return null;
+      })
+      .filter(Boolean);
+
+    setProfile({ ...profile, interests: idsOnly });
   };
 
 
@@ -153,7 +211,7 @@ export default function EditProfileScreen() {
             source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop' }}
             style={styles.avatar}
           />
-          <Pressable style={styles.cameraButton}>
+          <Pressable style={styles.cameraButton} onPress={pickImage}>
             <Camera size={20} color="#FF00FF" />
           </Pressable>
         </View>
@@ -198,42 +256,32 @@ export default function EditProfileScreen() {
             </GradientInput>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Birthdate</Text>
-            <GradientInput>
-              <TextInput
-                style={styles.inputInner}
-                value={profile.birthdate}
-                onChangeText={(text) => setProfile({ ...profile, birthdate: text })}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#666"
-              />
-            </GradientInput>
-          </View>
 
           <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Gender</Text>
-              <GradientInput>
-                <TextInput
-                  style={styles.inputInner}
-                  value={profile.gender}
-                  onChangeText={(text) => setProfile({ ...profile, gender: text })}
-                  placeholderTextColor="#666"
-                />
-              </GradientInput>
-            </View>
-            <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
-              <Text style={styles.label}>Gender Preference</Text>
-              <GradientInput>
-                <TextInput
-                  style={styles.inputInner}
-                  value={profile.genderPreference}
-                  onChangeText={(text) => setProfile({ ...profile, genderPreference: text })}
-                  placeholderTextColor="#666"
-                />
-              </GradientInput>
-            </View>
+            <SelectInput
+              label="Gender"
+              value={profile.gender}
+              onValueChange={(val) => setProfile({ ...profile, gender: val })}
+              items={[
+                { label: 'Male', value: 'Male' },
+                { label: 'Female', value: 'Female' },
+                { label: 'Other', value: 'Other' }
+              ]}
+              placeholder="Select Gender"
+            />
+
+
+            <SelectInput
+              label="Gender Preference"
+              value={profile.genderPreference}
+              onValueChange={(val) => setProfile({ ...profile, genderPreference: val })}
+              items={[
+                { label: 'Male', value: 'Male' },
+                { label: 'Female', value: 'Female' },
+                { label: 'Both', value: 'Both' }
+              ]}
+              placeholder="Select Gender Preference"
+            />
           </View>
 
           <View style={styles.row}>
@@ -249,7 +297,7 @@ export default function EditProfileScreen() {
                 />
               </GradientInput>
             </View>
-            <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
+            <View style={[styles.inputGroup, { flex: 1 }]}>
               <Text style={styles.label}>Weight (kg)</Text>
               <GradientInput>
                 <TextInput
@@ -274,30 +322,129 @@ export default function EditProfileScreen() {
               />
             </GradientInput>
           </View>
-
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Address</Text>
+            <Text style={styles.label}>Profession</Text>
             <GradientInput>
               <TextInput
                 style={styles.inputInner}
-                value={profile.address}
-                onChangeText={(text) => setProfile({ ...profile, address: text })}
+                value={profile.profession}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, profession: text })
+                }
+                placeholder="Software Engineer"
                 placeholderTextColor="#666"
               />
             </GradientInput>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Category (e.g., Friendship)</Text>
+
+            <SelectInput
+              label="Marital Status"
+              value={profile.marital_status}
+              onValueChange={(val) => setProfile({ ...profile, marital_status: val })}
+              items={[
+                { label: 'Married', value: 'married' },
+                { label: 'Unmarried', value: 'unmarried' },
+                { label: 'Widow', value: 'widow' }
+              ]}
+              placeholder="Select Marital Status"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Country</Text>
             <GradientInput>
               <TextInput
                 style={styles.inputInner}
-                value={profile.category}
-                onChangeText={(text) => setProfile({ ...profile, category: text })}
+                value={profile.address.country}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, address: { ...profile.address, country: text } })
+                }
+                placeholder="India"
                 placeholderTextColor="#666"
               />
             </GradientInput>
           </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>State</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.address.state}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, address: { ...profile.address, state: text } })
+                }
+                placeholder="Gujarat"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>City</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.address.city}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, address: { ...profile.address, city: text } })
+                }
+                placeholder="Surat"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Pincode</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.address.pincode}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, address: { ...profile.address, pincode: text } })
+                }
+                placeholder="395007"
+                keyboardType="numeric"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Locality</Text>
+            <GradientInput>
+              <TextInput
+                style={styles.inputInner}
+                value={profile.address.locality}
+                onChangeText={(text) =>
+                  setProfile({ ...profile, address: { ...profile.address, locality: text } })
+                }
+                placeholder="Near Diamond Market"
+                placeholderTextColor="#666"
+              />
+            </GradientInput>
+          </View>
+
+
+
+          <View style={styles.inputGroup}>
+
+            <SelectInput
+              label="Category"
+              value={profile.category}
+              onValueChange={(val) => setProfile({ ...profile, category: val })}
+              items={[
+                { label: 'Casual Dating', value: 'Casual Dating' },
+                { label: 'Serious Relationship', value: 'Serious Relationship' },
+                { label: 'Friendship', value: 'Friendship' }
+              ]}
+              placeholder="Select Category"
+            />
+          </View>
+
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>About</Text>
@@ -329,18 +476,18 @@ export default function EditProfileScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Interests</Text>
-            <GradientInput>
-              <TextInput
-                style={styles.inputInner}
-                value={profile.interests?.join(', ')}
-                onChangeText={(text) =>
-                  setProfile({ ...profile, interests: text.split(',').map(item => item.trim()) })
-                }
-                placeholder="Photography, Cooking"
-                placeholderTextColor="#666"
-              />
-            </GradientInput>
+
+            <MultipleSelectInput
+              label="Interests"
+              value={profile.interests.map((i) => (typeof i === 'string' ? i : i._id))}
+              onValueChange={handleInterestsChange}
+              items={interests.map((interest) => ({
+                label: interest.name,
+                value: interest.id, // ✅ string
+              }))}
+              placeholder="Select Interests"
+            />
+
           </View>
 
           <View style={styles.inputGroup}>
@@ -460,6 +607,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+    gap: 16,
   },
   selectInput: {
     height: 48,

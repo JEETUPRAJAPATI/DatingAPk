@@ -2,33 +2,63 @@ import { View, Text, StyleSheet, Image, Pressable, ScrollView, Modal } from 'rea
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, MoveVertical as MoreVertical, Share2, Shield, Ban } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../apiUrl';
+import { useUserProfile } from '../context/userContext';
+import axios from 'axios';
 
-const profiles = {
-  '1': {
-    name: 'Sarah',
-    age: 28,
-    location: 'New York, NY',
-    distance: '1.4 km',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-    about: 'Adventure seeker and coffee enthusiast. Let\'s explore the world together! 🌎✈️ Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    interests: ['Shopping', 'Books', 'Music', 'Singing', 'Dancing', 'Modeling'],
-    gallery: [
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop',
-    ]
-  },
-  // ... add other profiles
-};
+// const profiles = {
+//   '1': {
+//     name: 'Sarah',
+//     age: 28,
+//     location: 'New York, NY',
+//     distance: '1.4 km',
+//     image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
+//     about: 'Adventure seeker and coffee enthusiast. Let\'s explore the world together! 🌎✈️ Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+//     interests: ['Shopping', 'Books', 'Music', 'Singing', 'Dancing', 'Modeling'],
+//     gallery: [
+//       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop',
+//       'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop',
+//       'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop',
+//       'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop',
+//     ]
+//   },
+
+// };
 
 export default function ViewProfileScreen() {
   const { id } = useLocalSearchParams();
   const [showOptions, setShowOptions] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const { token } = useUserProfile()
+  const [profile, setProfile] = useState(null);
 
-  const profile = profiles[id as keyof typeof profiles];
+  console.log("profile : ", profile)
+  // Fetch profile data from API using Axios
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/user/details/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = response.data;
+        if (data.status) {
+          setProfile(data.user);
+        } else {
+          console.error('Profile not found');
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [id, token]);
+
+  // const profile = profiles[id as keyof typeof profiles];
 
   if (!profile) {
     return (
@@ -42,7 +72,17 @@ export default function ViewProfileScreen() {
     <View style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
-          <Image source={{ uri: profile.image }} style={styles.coverImage} />
+          <Image
+            source={{
+              uri: profile.profile_image ||
+                (profile.i_am === 'Female'
+                  ? 'https://img.freepik.com/free-psd/3d-rendering-hair-style-avatar-design_23-2151869123.jpg?semt=ais_hybrid&w=740'
+                  : 'https://st.depositphotos.com/46542440/55685/i/450/depositphotos_556851336-stock-illustration-square-face-character-stiff-art.jpg'),
+
+            }}
+            style={styles.coverImage}
+          />
+
           <LinearGradient
             colors={['rgba(0,0,0,0.7)', 'transparent']}
             style={styles.headerGradient}
@@ -63,7 +103,7 @@ export default function ViewProfileScreen() {
           </View>
 
           <Text style={styles.name}>{profile.name}, {profile.age}</Text>
-          <Text style={styles.location}>{profile.location} • {profile.distance}</Text>
+          <Text style={styles.location}>{profile.address.country} • {profile.address.city}</Text>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>About</Text>
@@ -73,7 +113,7 @@ export default function ViewProfileScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Interests</Text>
             <View style={styles.interestsContainer}>
-              {profile.interests.map((interest, index) => (
+              {profile.interests?.map((interest, index) => (
                 <View key={index} style={styles.interestTag}>
                   <Text style={styles.interestText}>{interest}</Text>
                 </View>
@@ -81,14 +121,14 @@ export default function ViewProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <Text style={styles.sectionTitle}>Gallery</Text>
             <View style={styles.gallery}>
-              {profile.gallery.map((image, index) => (
+              {profile.gallery?.map((image, index) => (
                 <Image key={index} source={{ uri: image }} style={styles.galleryImage} />
               ))}
             </View>
-          </View>
+          </View> */}
         </View>
       </ScrollView>
 
@@ -145,7 +185,7 @@ export default function ViewProfileScreen() {
               'Feels Like Spam',
               'User is underage',
               'Others'
-            ].map((reason, index) => (
+            ]?.map((reason, index) => (
               <Pressable key={index} style={styles.reportOption}>
                 <Text style={styles.reportOptionText}>{reason}</Text>
               </Pressable>
@@ -218,7 +258,9 @@ const styles = StyleSheet.create({
     marginTop: -50,
   },
   matchBadge: {
-    backgroundColor: '#FF00FF',
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: '#03d7fc',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -228,7 +270,7 @@ const styles = StyleSheet.create({
   matchText: {
     fontFamily: 'Rajdhani-SemiBold',
     fontSize: 14,
-    color: '#000000',
+    color: '#FF00FF',
   },
   name: {
     fontFamily: 'Orbitron-Bold',
@@ -263,9 +305,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   interestTag: {
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
     borderRadius: 16,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -273,7 +315,7 @@ const styles = StyleSheet.create({
   interestText: {
     fontFamily: 'Rajdhani',
     fontSize: 14,
-    color: '#FF00FF',
+    color: '#03d7fc',
   },
   gallery: {
     flexDirection: 'row',
@@ -285,7 +327,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   modalOverlay: {
     flex: 1,

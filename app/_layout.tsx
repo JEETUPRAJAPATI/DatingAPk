@@ -8,10 +8,15 @@ import SplashScreen from '@/components/SplashScreen';
 import Toast from 'react-native-toast-message';
 import { UserProfileProvider } from './context/userContext';
 import { FilterProvider } from './context/filterContext';
+import { InterestsProvider, useInterests } from './context/interestContext';
+import { API_BASE_URL } from './apiUrl';
 
 export default function RootLayout() {
+
+
   useFrameworkReady();
   const [showSplash, setShowSplash] = useState(true);
+
 
   const [fontsLoaded, fontError] = useFonts({
     'Orbitron': Orbitron_400Regular,
@@ -35,24 +40,26 @@ export default function RootLayout() {
   }
 
   return (
-    <UserProfileProvider>
-      <FilterProvider>
-        <>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="auth/login" />
-            <Stack.Screen name="auth/signup" />
-            <Stack.Screen name="auth/verify" />
-            <Stack.Screen name="auth/gender" />
-            <Stack.Screen name="auth/looking-for" />
-            <Stack.Screen name="auth/profile" />
-            <Stack.Screen name="auth/notifications" />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="light" />
-          <Toast />
-        </>
-      </FilterProvider>
-    </UserProfileProvider>
+    <InterestsProvider>
+      <UserProfileProvider>
+        <FilterProvider>
+          <>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="auth/login" />
+              <Stack.Screen name="auth/signup" />
+              <Stack.Screen name="auth/verify" />
+              <Stack.Screen name="auth/gender" />
+              <Stack.Screen name="auth/looking-for" />
+              <Stack.Screen name="auth/profile" />
+              <Stack.Screen name="auth/notifications" />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="light" />
+            <Toast />
+          </>
+        </FilterProvider>
+      </UserProfileProvider>
+    </InterestsProvider>
   );
 }

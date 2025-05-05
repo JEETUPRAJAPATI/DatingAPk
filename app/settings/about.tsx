@@ -94,11 +94,11 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 32,
-    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+    // backgroundColor: 'rgba(0, 229, 255, 0.1)',
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#FF00FF',
+    borderColor: '#03d7fc',
   },
   sectionTitle: {
     fontFamily: 'Orbitron-Bold',
