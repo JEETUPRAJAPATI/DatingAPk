@@ -238,28 +238,63 @@ export default function ChatScreen() {
 
   const handleAttachment = async (type: 'camera' | 'gallery' | 'document') => {
     setShowAttachments(false);
+    let result;
 
     if (type === 'gallery') {
-      const result = await ImagePicker.launchImageLibraryAsync({
+      result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 1,
       });
+    } else if (type === 'camera') {
+      result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+    }
 
-      if (!result.canceled && result.assets[0]) {
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          message: '',
-          image: result.assets[0].uri,
-          sender_id: userProfile._id,
-          receiver_id: id,
-          read: false,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages([...messages, newMessage]);
-        scrollViewRef.current?.scrollToEnd({ animated: true });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+
+      const formData = new FormData();
+      formData.append('receiver_id', id);
+      formData.append('type', 'image');
+      formData.append('message', asset.fileName || 'image.jpg');
+      formData.append('file', {
+        uri: asset.uri,
+        name: asset.fileName || 'image.jpg',
+        type: asset.type || 'image/jpeg',
+      });
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/chat/send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data?.message?._id) {
+          const newMessage: Message = {
+            _id: data.message._id,
+            message: data.message.message,
+            image: data.message.file_url,
+            sender_id: data.message.sender_id,
+            receiver_id: data.message.receiver_id,
+            read: data.message.read,
+            timestamp: data.message.timestamp,
+          };
+          setMessages(prev => [...prev, newMessage]);
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }
+      } catch (err) {
+        console.error('Failed to send image message:', err);
       }
     }
   };
+
 
 
   if (loading) {

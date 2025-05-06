@@ -36,6 +36,7 @@ export default function ViewProfileScreen() {
   console.log("profile : ", profile)
   // Fetch profile data from API using Axios
   useEffect(() => {
+
     const fetchUserProfile = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/user/details/${id}`, {
@@ -55,7 +56,9 @@ export default function ViewProfileScreen() {
       }
     };
 
+
     fetchUserProfile();
+
   }, [id, token]);
 
   // const profile = profiles[id as keyof typeof profiles];
@@ -115,7 +118,7 @@ export default function ViewProfileScreen() {
             <View style={styles.interestsContainer}>
               {profile.interests?.map((interest, index) => (
                 <View key={index} style={styles.interestTag}>
-                  <Text style={styles.interestText}>{interest}</Text>
+                  <Text style={styles.interestText}>{interest?.name}</Text>
                 </View>
               ))}
             </View>

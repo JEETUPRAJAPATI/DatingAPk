@@ -15,7 +15,6 @@ export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-
   const handleLoginwithNumber = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/auth/send-otp`, {
@@ -163,7 +162,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -100,
+    marginTop: -90,
   },
   title: {
     fontFamily: 'Orbitron-Bold',

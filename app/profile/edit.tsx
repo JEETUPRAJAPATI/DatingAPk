@@ -132,14 +132,15 @@ export default function EditProfileScreen() {
 
       // Attach profile image if present and is a local file
       const fileUri = profile.profileImage;
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-
-      if (fileInfo.exists) {
-        formData.append('profile_image', {
-          uri: fileInfo.uri,
-          name: `profile.jpg`, // hardcoded or from mime
-          type: 'image/jpeg',
-        });
+      if (fileUri && fileUri.startsWith('file://')) {
+        const fileInfo = await FileSystem.getInfoAsync(fileUri);
+        if (fileInfo.exists) {
+          formData.append('profile_image', {
+            uri: fileInfo.uri,
+            name: `profile.jpg`,
+            type: 'image/jpeg',
+          });
+        }
       }
 
       for (let pair of formData.entries()) {
@@ -180,8 +181,6 @@ export default function EditProfileScreen() {
     }
   };
 
-
-
   const handleInterestsChange = (selectedItems: any[]) => {
     const idsOnly = selectedItems
       .map(item => {
@@ -195,7 +194,6 @@ export default function EditProfileScreen() {
     setProfile({ ...profile, interests: idsOnly });
   };
 
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -208,7 +206,7 @@ export default function EditProfileScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.avatarSection}>
           <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop' }}
+            source={{ uri: user?.profile_image || "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop" }}
             style={styles.avatar}
           />
           <Pressable style={styles.cameraButton} onPress={pickImage}>

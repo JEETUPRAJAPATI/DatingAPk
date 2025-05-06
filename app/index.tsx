@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Heart } from 'lucide-react-native';
 import { useUserProfile } from './context/userContext';
 import { useEffect } from 'react';
+import { Video } from 'expo-av';
 
 
 export default function IntroScreen() {

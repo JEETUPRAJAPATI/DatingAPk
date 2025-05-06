@@ -169,7 +169,11 @@ export default function ProfileScreen() {
         <View style={styles.profileHeader}>
           <View style={styles.coverImageContainer}>
             <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop' }}
+              source={{
+                uri: user?.profile_image?.startsWith("http")
+                  ? user.profile_image
+                  : "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop",
+              }}
               style={styles.coverImage}
             />
             <LinearGradient
@@ -180,12 +184,12 @@ export default function ProfileScreen() {
 
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop' }}
+              source={{ uri: user?.profile_image || "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop" }}
               style={styles.avatar}
             />
-            <Pressable style={styles.cameraButton}>
+            {/* <Pressable style={styles.cameraButton}>
               <Camera size={20} color="#03d7fc" />
-            </Pressable>
+            </Pressable> */}
           </View>
 
           <View style={styles.profileInfo}>

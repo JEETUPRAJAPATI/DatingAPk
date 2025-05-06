@@ -9,6 +9,8 @@ interface Story {
     id: string;
     imageUrl: string;
     timestamp: string;
+    username: string;
+    avatarUrl: string;
 }
 
 interface StoryViewerProps {
@@ -76,6 +78,8 @@ export default function StoryViewer({ visible, onClose, stories, currentIndex }:
         console.log('Commenting on story:', currentStory?.id);
     };
 
+    console.log("current story : ", currentStory)
+
     return (
         <Modal visible={visible} transparent animationType="fade">
             <View style={styles.container}>
@@ -113,7 +117,7 @@ export default function StoryViewer({ visible, onClose, stories, currentIndex }:
                                 <View style={styles.onlineIndicator} />
                             </View>
                             <View>
-                                <Text style={styles.username}>Jessica Parker</Text>
+                                <Text style={styles.username}>{currentStory?.username}</Text>
                                 <Text style={styles.timestamp}>{currentStory?.timestamp}</Text>
                             </View>
                         </View>
@@ -155,7 +159,7 @@ export default function StoryViewer({ visible, onClose, stories, currentIndex }:
                 </View>
 
                 <View style={styles.footer}>
-                    <View style={styles.actions}>
+                    {/* <View style={styles.actions}>
                         <Pressable style={styles.actionButton} onPress={handleLike}>
                             <Heart size={24} color="#FF00FF" />
                         </Pressable>
@@ -165,7 +169,7 @@ export default function StoryViewer({ visible, onClose, stories, currentIndex }:
                         <Pressable style={styles.actionButton} onPress={handleShare}>
                             <Share2 size={24} color="#FF00FF" />
                         </Pressable>
-                    </View>
+                    </View> */}
                 </View>
             </View>
         </Modal>

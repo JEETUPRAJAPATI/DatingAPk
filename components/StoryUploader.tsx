@@ -6,12 +6,15 @@ import * as ImagePicker from 'expo-image-picker';
 interface StoryUploaderProps {
     visible: boolean;
     onClose: () => void;
-    onUpload: (imageUri: string) => void;
+    onUpload: (image: { uri: string; type: string; fileName: string }) => void;
 }
 
 export default function StoryUploader({ visible, onClose, onUpload }: StoryUploaderProps) {
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    console.log('Uploading image with URI:', selectedImage);
+    const [selectedImage, setSelectedImage] = useState<{
+        uri: string;
+        type: string;
+        fileName: string;
+    } | null>(null);
 
     const handlePickImage = async (useCamera: boolean) => {
         try {
@@ -23,7 +26,6 @@ export default function StoryUploader({ visible, onClose, onUpload }: StoryUploa
                     allowsEditing: true,
                     aspect: [9, 16],
                     quality: 1,
-                    base64: false,
                 });
             } else {
                 result = await ImagePicker.launchImageLibraryAsync({
@@ -31,12 +33,21 @@ export default function StoryUploader({ visible, onClose, onUpload }: StoryUploa
                     allowsEditing: true,
                     aspect: [9, 16],
                     quality: 1,
-                    base64: false,
                 });
             }
 
             if (!result.canceled && result.assets[0]) {
-                setSelectedImage(result.assets[0].uri);
+                const asset = result.assets[0];
+
+                // Guess filename if missing
+                const guessedFilename = asset.uri.split('/').pop() || 'story.jpg';
+                const guessedType = asset.type || 'image/jpeg';
+
+                setSelectedImage({
+                    uri: asset.uri,
+                    type: guessedType,
+                    fileName: asset.fileName || guessedFilename,
+                });
             }
         } catch (error) {
             console.error('Error picking image:', error);
@@ -64,7 +75,7 @@ export default function StoryUploader({ visible, onClose, onUpload }: StoryUploa
 
                     {selectedImage ? (
                         <View style={styles.previewContainer}>
-                            <Image source={{ uri: selectedImage }} style={styles.preview} />
+                            <Image source={{ uri: selectedImage.uri }} style={styles.preview} />
                             <Pressable style={styles.uploadButton} onPress={handleUpload}>
                                 <Upload size={24} color="#000000" />
                                 <Text style={styles.uploadButtonText}>Share Story</Text>

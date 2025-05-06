@@ -89,7 +89,7 @@ export default function ChatsScreen() {
             <View style={styles.userInfo}>
               <View style={styles.nameRow}>
                 <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.timestamp}>{new Date(user?.timestamp).toLocaleString()}</Text>
+
               </View>
 
               <View style={styles.messageRow}>
@@ -111,18 +111,32 @@ export default function ChatsScreen() {
               </View>
             </View>
 
-            <View style={styles.actionButtons}>
-              <Pressable style={styles.actionButton}>
-                <Video size={20} color="#FF00FF" />
-              </Pressable>
-              <Pressable style={styles.actionButton} onPress={() => {
-                router.push({
-                  pathname: '/chat/[id]',
-                  params: { id: user.id }
-                });
-              }}>
-                <MessageSquare size={20} color="#FF00FF" />
-              </Pressable>
+            <View style={styles.actionCols}>
+              <View style={styles.actionButtons}>
+
+                <Pressable style={styles.actionButton} onPress={() => {
+                  router.push({
+                    pathname: '/chat/[id]',
+                    params: { id: user.id }
+                  });
+                }}>
+                  <MessageSquare size={20} color="#FF00FF" />
+                </Pressable>
+                <Pressable style={styles.actionButton} onPress={() => {
+                  router.push({
+                    pathname: '/video/[id]',
+                    params: { id: user.id }
+                  })
+                }}>
+                  <Video size={20} color="#FF00FF" />
+                </Pressable>
+              </View>
+              <View>
+                <Text style={styles.timestamp}>
+                  {new Date(user?.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </View>
+
             </View>
           </Pressable>
         ))}
@@ -286,8 +300,14 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     gap: 8,
+
+  },
+  actionCols: {
+    flexDirection: 'column',
+    gap: 8,
     marginLeft: 12,
   },
+
   actionButton: {
     width: 36,
     height: 36,
